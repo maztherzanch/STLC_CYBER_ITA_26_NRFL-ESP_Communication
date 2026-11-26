@@ -1,0 +1,3681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BastWAN Aero Ultimate — Nodo Central, Canal Seguro, Lienzo Bit a Bit & Juegos LoRa</title>
+  <style>
+    :root {
+      --aero-border: rgba(255, 255, 255, 0.9);
+      --aero-dark: #05263d;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", "Trebuchet MS", Frutiger, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.82) 0%, transparent 35%),
+        radial-gradient(circle at 85% 18%, rgba(0, 255, 225, 0.5) 0%, transparent 45%),
+        radial-gradient(circle at 50% 95%, rgba(120, 245, 80, 0.62) 0%, transparent 50%),
+        linear-gradient(180deg, #0284c7 0%, #38bdf8 48%, #86efac 84%, #16a34a 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px;
+      color: var(--aero-dark);
+      overflow-x: hidden;
+    }
+
+    .bubble {
+      position: fixed;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.92), rgba(255,255,255,0.15) 60%, rgba(0,212,255,0.35) 100%);
+      box-shadow: inset 0 0 15px rgba(255,255,255,0.85), 0 8px 20px rgba(0,80,120,0.15);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .b1 { width: 130px; height: 130px; top: 5%; left: 3%; }
+    .b2 { width: 80px; height: 80px; bottom: 8%; left: 9%; }
+    .b3 { width: 150px; height: 150px; top: 8%; right: 4%; }
+    .b4 { width: 65px; height: 65px; bottom: 12%; right: 10%; }
+
+    .aero-window {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1320px;
+      background: linear-gradient(160deg, rgba(255,255,255,0.82) 0%, rgba(210,242,255,0.68) 100%);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-radius: 22px;
+      border: 2px solid var(--aero-border);
+      box-shadow: 0 22px 55px rgba(0, 50, 90, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.95);
+      overflow: hidden;
+    }
+
+    @keyframes msnShake {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      10%, 30%, 50%, 70%, 90% { transform: translate(-10px, -6px) rotate(-1.2deg); }
+      20%, 40%, 60%, 80% { transform: translate(10px, 6px) rotate(1.2deg); }
+    }
+    .shake-nudge {
+      animation: msnShake 0.55s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    .titlebar {
+      background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(168,228,255,0.8) 50%, rgba(95,198,250,0.9) 52%, rgba(185,238,255,0.94) 100%);
+      padding: 10px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.95);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.12rem;
+      color: #033457;
+      text-shadow: 0 1px 1px rgba(255,255,255,0.95);
+    }
+
+    .orb-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 25%, #ffffff 0%, #4facfe 35%, #00c6fb 75%, #005bea 100%);
+      box-shadow: 0 3px 8px rgba(0,91,234,0.45), inset 0 2px 4px #fff;
+      border: 1.5px solid #fff;
+    }
+
+    .aero-btn {
+      border: 1.5px solid rgba(255, 255, 255, 0.92);
+      border-radius: 20px;
+      padding: 7px 13px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: #fff;
+      cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+      background: linear-gradient(180deg, #76d2ff 0%, #1ea2ff 49%, #0077e6 51%, #38b6ff 100%);
+      box-shadow: 0 3px 8px rgba(0, 105, 200, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.95);
+      transition: all 0.15s ease;
+    }
+    .aero-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
+    .aero-btn:active:not(:disabled) { transform: translateY(1px); }
+    .aero-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-green  { background: linear-gradient(180deg, #9ef886 0%, #38d948 49%, #18a828 51%, #5cf06b 100%); }
+    .btn-red    { background: linear-gradient(180deg, #ff9a9e 0%, #ff414d 49%, #d61a27 51%, #ff6b74 100%); }
+    .btn-amber  { background: linear-gradient(180deg, #ffe285 0%, #ffae00 49%, #e08b00 51%, #ffc947 100%); color: #3d2600; text-shadow: 0 1px 1px rgba(255,255,255,0.7); }
+    .btn-purple { background: linear-gradient(180deg, #d8b4fe 0%, #9333ea 49%, #6b21a8 51%, #a855f7 100%); }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    .left-column {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .glass-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.86) 0%, rgba(230,248,255,0.72) 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.94);
+      border-radius: 16px;
+      padding: 10px 13px;
+      box-shadow: 0 5px 14px rgba(0, 70, 120, 0.1), inset 0 1px 2px #fff;
+    }
+
+    /* ESTILOS DEL PANEL DE NODO CENTRAL Y CANAL SEGURO */
+    .central-card {
+      background: linear-gradient(180deg, rgba(254, 249, 195, 0.92) 0%, rgba(224, 242, 254, 0.85) 100%);
+      border: 2px solid #38bdf8;
+    }
+
+    .central-grid-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .channel-pill-badge {
+      font-size: 0.75rem;
+      font-weight: 900;
+      background: linear-gradient(180deg, #042d47, #031826);
+      color: #4ade80;
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1.5px solid #38bdf8;
+      font-family: monospace;
+    }
+
+    .card-title {
+      margin: 0 0 7px 0;
+      font-size: 0.86rem;
+      font-weight: 800;
+      color: #05426b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(0, 140, 210, 0.2);
+      padding-bottom: 4px;
+    }
+
+    /* Llamadas */
+    .call-status-box {
+      text-align: center;
+      padding: 6px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(220,245,255,0.9), rgba(185,232,255,0.7));
+      border: 1px solid #fff;
+      margin-bottom: 7px;
+    }
+    .call-status-box.ringing {
+      background: linear-gradient(180deg, #fff3b0, #ffca3a);
+      animation: pulseRing 0.8s infinite alternate;
+    }
+    .call-status-box.in-call {
+      background: linear-gradient(180deg, #c7f9cc, #80ed99);
+    }
+    @keyframes pulseRing {
+      from { transform: scale(1); }
+      to   { transform: scale(1.02); box-shadow: 0 0 16px rgba(255, 140, 0, 0.8); }
+    }
+    .call-controls {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* RADAR & CALIBRACIÓN */
+    .radar-layout {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .radar-box {
+      position: relative;
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #063d28 0%, #032217 75%, #01140d 100%);
+      border: 3px solid #ffffff;
+      box-shadow: 0 5px 12px rgba(0, 90, 60, 0.35), inset 0 0 16px rgba(0, 255, 128, 0.45);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .radar-metrics {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .distance-readout {
+      background: linear-gradient(180deg, #042d47 0%, #084c73 100%);
+      color: #72faca;
+      padding: 5px 8px;
+      border-radius: 10px;
+      border: 1.5px solid #a5f3fc;
+      text-align: center;
+      font-family: monospace;
+    }
+
+    .distance-meters {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #4ade80;
+      text-shadow: 0 0 8px rgba(74, 222, 128, 0.7);
+    }
+
+    .foco-aero {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: radial-gradient(circle at 32% 28%, #ffffff 0%, #9db4c4 35%, #5c768d 80%, #374b5e 100%);
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.8);
+      transition: all 0.2s ease;
+    }
+    .foco-aero.lit {
+      background: radial-gradient(circle at 32% 28%, #ffffff 0%, #adff2f 25%, #00ff66 65%, #008f39 100%);
+      box-shadow: 0 0 18px #00ff66, 0 0 30px #adff2f, inset 0 2px 6px #ffffff;
+      transform: scale(1.08);
+    }
+
+    .calib-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 5px;
+      margin-top: 5px;
+      padding-top: 5px;
+      border-top: 1px dashed rgba(0, 110, 170, 0.25);
+      font-size: 0.73rem;
+      font-weight: 700;
+    }
+
+    /* CONSOLA SNIFFER EN VIVO */
+    .sniffer-console {
+      background: #031826;
+      color: #67e8f9;
+      font-family: monospace;
+      font-size: 0.68rem;
+      padding: 7px;
+      border-radius: 10px;
+      border: 1.5px solid #38bdf8;
+      height: 110px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+    }
+
+    .sniffer-entry {
+      border-bottom: 1px dashed rgba(56, 189, 248, 0.25);
+      padding-bottom: 4px;
+      line-height: 1.3;
+      word-break: break-all;
+    }
+    .sniffer-entry .tag-tx { color: #fde047; font-weight: bold; }
+    .sniffer-entry .tag-rx { color: #4ade80; font-weight: bold; }
+    .sniffer-entry .tag-atk { color: #ff4d4d; font-weight: bold; }
+
+    .hacker-btns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      margin-top: 6px;
+    }
+    .hacker-btns button { font-size: 0.7rem; padding: 5px 4px; }
+
+    /* COLUMNA DERECHA */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      height: 785px;
+    }
+
+    .aero-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 13px;
+      border: 1.5px solid rgba(255,255,255,0.9);
+      background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(195,235,255,0.58));
+      color: #05426b;
+      font-weight: 800;
+      font-size: 0.83rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      background: linear-gradient(180deg, #76d2ff 0%, #1ea2ff 49%, #0077e6 51%, #38b6ff 100%);
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+      box-shadow: 0 4px 12px rgba(0, 119, 230, 0.38);
+    }
+
+    .tab-view {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .tab-view.active { display: flex; }
+
+    /* CHAT + EXTRAS + LIENZO BIT A BIT */
+    .chat-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: rgba(255,255,255,0.75);
+      padding: 6px 10px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border: 1px solid #fff;
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
+    .quick-bar-btns {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .mini-chip {
+      border: 1px solid #bae6fd;
+      background: linear-gradient(180deg, #ffffff, #e0f2fe);
+      border-radius: 10px;
+      padding: 3px 7px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      cursor: pointer;
+      color: #033457;
+      transition: transform 0.12s;
+    }
+    .mini-chip:hover:not(:disabled) { transform: scale(1.06); background: #bae6fd; }
+    .mini-chip:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .chat-history {
+      flex: 1;
+      overflow-y: auto;
+      padding: 13px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(235,250,255,0.82) 100%);
+      border: 1.5px solid #fff;
+      box-shadow: inset 0 3px 10px rgba(0, 85, 140, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-bubble {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      line-height: 1.38;
+      font-size: 0.92rem;
+      box-shadow: 0 3px 9px rgba(0, 60, 110, 0.12), inset 0 1px 1px #fff;
+      word-wrap: break-word;
+    }
+    .chat-bubble.me {
+      align-self: flex-end;
+      background: linear-gradient(180deg, #b8f1ff 0%, #68d4ff 100%);
+      border: 1px solid #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-bubble.peer {
+      align-self: flex-start;
+      background: linear-gradient(180deg, #ffffff 0%, #d8f8e1 100%);
+      border: 1px solid #fff;
+      border-bottom-left-radius: 4px;
+    }
+    .chat-bubble.global-broadcast {
+      align-self: center;
+      max-width: 94%;
+      background: linear-gradient(180deg, #fef08a 0%, #facc15 100%);
+      border: 2px solid #ca8a04;
+      color: #422006;
+      font-weight: 800;
+      box-shadow: 0 6px 18px rgba(234, 179, 8, 0.35);
+    }
+    .chat-bubble.system {
+      align-self: center;
+      max-width: 92%;
+      font-size: 0.78rem;
+      padding: 5px 12px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #a8defc;
+      border-radius: 18px;
+    }
+    .chat-bubble.security-alert {
+      align-self: center;
+      max-width: 94%;
+      background: linear-gradient(180deg, #ffd6d6 0%, #ff9494 100%);
+      border: 1.5px solid #ff2626;
+      color: #5c0000;
+      font-weight: 800;
+      font-size: 0.8rem;
+    }
+
+    .sticker-big {
+      font-size: 3.4rem;
+      text-align: center;
+      line-height: 1.1;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+      animation: popSticker 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    @keyframes popSticker {
+      from { transform: scale(0.3); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    .voice-badge-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(255,255,255,0.7);
+      padding: 4px 9px;
+      border-radius: 10px;
+      margin-bottom: 5px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      border: 1px solid rgba(0,120,190,0.2);
+    }
+
+    /* Monitor de Lienzo Bit a Bit en el Chat */
+    .bitstream-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(4, 30, 48, 0.92);
+      color: #e0f2fe;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1.5px solid #38bdf8;
+      min-width: 240px;
+    }
+
+    .sstv-progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(56, 189, 248, 0.5);
+    }
+    .sstv-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00e5ff, #4ade80);
+      transition: width 0.15s ease;
+    }
+
+    .bit-ticker {
+      font-family: monospace;
+      font-size: 0.7rem;
+      color: #4ade80;
+      background: #021019;
+      padding: 4px 7px;
+      border-radius: 6px;
+      border: 1px solid rgba(74, 222, 128, 0.35);
+      letter-spacing: 1px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .bubble-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 5px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      opacity: 0.85;
+      flex-wrap: wrap;
+    }
+
+    .hash-pill {
+      background: rgba(255,255,255,0.82);
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-family: monospace;
+      border: 1px solid rgba(0,120,190,0.25);
+    }
+
+    .ack-check { color: #04598c; font-weight: 900; }
+    .ack-check.verified {
+      color: #0b8a28;
+      background: rgba(255,255,255,0.85);
+      padding: 1px 6px;
+      border-radius: 8px;
+    }
+
+    /* ESTUDIO PIXEL-ART 16x16 PRO & TRANSMISOR BIT A BIT */
+    .pixel-drawer, .photo-sstv-drawer {
+      display: none;
+      gap: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(225,246,255,0.94));
+      padding: 12px;
+      border-radius: 16px;
+      border: 2px solid #38bdf8;
+      margin-top: 8px;
+      box-shadow: 0 10px 25px rgba(0,60,110,0.2);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .pixel-drawer.open, .photo-sstv-drawer.open { display: flex; }
+
+    .pixel-grid-16 {
+      display: grid;
+      grid-template-columns: repeat(16, 15px);
+      grid-template-rows: repeat(16, 15px);
+      gap: 1px;
+      background: #cbd5e1;
+      padding: 3px;
+      border-radius: 8px;
+      border: 2px solid #0284c7;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .px16-cell {
+      width: 15px;
+      height: 15px;
+      background: #ffffff;
+      cursor: crosshair;
+    }
+
+    .palette-16 {
+      display: grid;
+      grid-template-columns: repeat(8, 24px);
+      gap: 5px;
+    }
+
+    .pal16-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 2px solid #fff;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .pal16-swatch.active {
+      border: 2.5px solid #000;
+      transform: scale(1.15);
+    }
+
+    .photo-preview-box {
+      width: 164px;
+      height: 152px;
+      border-radius: 12px;
+      border: 2.5px solid #0284c7;
+      background:
+         conic-gradient(#0f172a 25%, #1e293b 0 50%, #0f172a 0 75%, #1e293b 0) 0 0 / 16px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.35);
+      flex-shrink: 0;
+      padding: 4px;
+    }
+
+    #photoQuantPreview {
+      max-width: 100%;
+      max-height: 100%;
+      image-rendering: pixelated;
+      border: 1px solid rgba(255,255,255,0.7);
+    }
+
+    .chat-input-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .aero-text-input {
+      flex: 1;
+      min-width: 150px;
+      padding: 9px 13px;
+      border-radius: 20px;
+      border: 1.5px solid #fff;
+      background: rgba(255, 255, 255, 0.94);
+      font-size: 0.88rem;
+      color: #04385e;
+      outline: none;
+    }
+
+    .aero-select {
+      padding: 6px 9px;
+      border-radius: 14px;
+      border: 1.5px solid #fff;
+      background: rgba(255,255,255,0.92);
+      font-weight: 800;
+      font-size: 0.75rem;
+      color: #033457;
+      cursor: pointer;
+    }
+
+    /* VISTA 2: PIZARRA DE COORDENADAS PRO */
+    .draw-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .draw-hud-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: rgba(255,255,255,0.9);
+      padding: 7px 12px;
+      border-radius: 12px;
+      border: 1.5px solid #fff;
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
+    .coord-pill {
+      font-family: monospace;
+      background: #042d47;
+      color: #4ade80;
+      padding: 2px 8px;
+      border-radius: 7px;
+      border: 1px solid #38bdf8;
+    }
+
+    .canvas-stage {
+      position: relative;
+      flex: 1;
+      background:
+        linear-gradient(rgba(14, 165, 233, 0.14) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14, 165, 233, 0.14) 1px, transparent 1px),
+        #ffffff;
+      background-size: 20px 20px;
+      border-radius: 14px;
+      border: 3px solid #ffffff;
+      box-shadow: inset 0 3px 12px rgba(0, 75, 130, 0.12);
+      overflow: hidden;
+      cursor: crosshair;
+      touch-action: none;
+    }
+    .canvas-stage.dark-mode {
+      background:
+        linear-gradient(rgba(56, 189, 248, 0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.15) 1px, transparent 1px),
+        #061826;
+      background-size: 20px 20px;
+    }
+
+    #coordCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .remote-pen-cursor {
+      position: absolute;
+      pointer-events: none;
+      transform: translate(-4px, -24px);
+      background: rgba(4, 45, 71, 0.92);
+      color: #4ade80;
+      font-family: monospace;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 10px;
+      border: 1.5px solid #4ade80;
+      white-space: nowrap;
+      transition: left 0.04s linear, top 0.04s linear, opacity 0.25s ease;
+      opacity: 0;
+      z-index: 5;
+    }
+
+    .draw-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: rgba(255,255,255,0.88);
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1.5px solid #fff;
+    }
+
+    .tool-chip {
+      padding: 5px 10px;
+      border-radius: 10px;
+      border: 1.5px solid #bae6fd;
+      background: #ffffff;
+      font-size: 0.76rem;
+      font-weight: 800;
+      cursor: pointer;
+      color: #033457;
+    }
+    .tool-chip.active {
+      background: #0284c7;
+      color: #fff;
+      border-color: #0369a1;
+    }
+
+    .color-orb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+    }
+    .color-orb.selected {
+      transform: scale(1.22);
+      border: 2.5px solid #000;
+    }
+
+    /* VISTA 3: AJEDREZ */
+    .chess-layout {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 6px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    @media (max-width: 720px) {
+      .chess-layout { grid-template-columns: 1fr; justify-items: center; }
+    }
+
+    .chess-board {
+      display: grid;
+      grid-template-columns: repeat(8, 52px);
+      grid-template-rows: repeat(8, 52px);
+      border: 4px solid #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 12px 28px rgba(0, 50, 90, 0.28);
+      user-select: none;
+    }
+
+    .chess-sq {
+      width: 52px;
+      height: 52px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2.1rem;
+      cursor: pointer;
+      position: relative;
+    }
+    .chess-sq.light { background: #e0f2fe; }
+    .chess-sq.dark  { background: #38bdf8; }
+    .chess-sq.selected { background: #fde047 !important; }
+    .chess-sq.valid-move::after {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(22, 163, 74, 0.8);
+      box-shadow: 0 0 6px #fff;
+    }
+    .chess-sq.last-move { box-shadow: inset 0 0 0 3px #f97316; }
+
+    .piece-w { color: #ffffff; text-shadow: 0 2px 3px #022c43, 0 0 2px #000; }
+    .piece-b { color: #091e2c; text-shadow: 0 1px 2px rgba(255,255,255,0.85); }
+
+    .chess-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      background: rgba(255,255,255,0.78);
+      padding: 12px;
+      border-radius: 14px;
+      border: 1.5px solid #fff;
+      height: 100%;
+    }
+
+    .move-log {
+      flex: 1;
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.9);
+      border-radius: 10px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      border: 1px solid #bae6fd;
+    }
+
+    /* VISTA 4: GATO P2P */
+    .gato-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .gato-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 108px);
+      grid-template-rows: repeat(3, 108px);
+      gap: 10px;
+      background: rgba(255,255,255,0.68);
+      padding: 14px;
+      border-radius: 22px;
+      border: 2px solid #fff;
+      box-shadow: 0 10px 28px rgba(0,70,130,0.18);
+    }
+
+    .gato-cell {
+      background: linear-gradient(180deg, #ffffff 0%, #d8f3ff 100%);
+      border: 2px solid #ffffff;
+      border-radius: 16px;
+      font-size: 3rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,80,140,0.12);
+      transition: transform 0.15s;
+    }
+    .gato-cell:hover { transform: scale(1.03); }
+    .gato-cell.win {
+      background: linear-gradient(180deg, #bbf7d0 0%, #4ade80 100%);
+      box-shadow: 0 0 18px #22c55e;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bubble b1"></div>
+  <div class="bubble b2"></div>
+  <div class="bubble b3"></div>
+  <div class="bubble b4"></div>
+
+  <!-- Selector de archivo oculto -->
+  <input type="file" id="hiddenFileInput" accept="image/*" style="display: none;" />
+
+  <div class="aero-window" id="mainWindow">
+    <!-- Barra Superior -->
+    <div class="titlebar">
+      <div class="brand">
+        <div class="orb-logo"></div>
+        <div>
+          BastWAN Aero Ultimate Suite
+          <div style="font-size: 0.73rem; font-weight: 600; opacity: 0.85;" id="nodeIdentity">
+            Sin placa vinculada (Conecta por USB Web Serial)
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button type="button" class="aero-btn btn-red" id="btnAbortQueue" style="display: none; padding: 4px 10px; font-size: 0.74rem;">
+          ⏹️ Abortar Envío
+        </button>
+        <span class="channel-pill-badge" id="channelBadge">
+          🔒 CH_0 (915.0MHz) | Key: --------
+        </span>
+        <span id="queueStatusPill" style="font-size: 0.76rem; font-weight: 800; background: rgba(255,255,255,0.85); padding: 4px 10px; border-radius: 12px;">
+          Canal LoRa: Libre
+        </span>
+        <span id="rssiDisplay" style="font-size: 0.8rem; font-weight: 800; background: rgba(255,255,255,0.85); padding: 4px 11px; border-radius: 12px;">
+          Señal: -- dBm
+        </span>
+        <button class="aero-btn" id="btnConnect">Conectar Placa BastWAN</button>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <!-- COLUMNA IZQUIERDA -->
+      <div class="left-column">
+
+        <!-- 0. NUEVO PANEL: NODO CENTRAL, ENRUTAMIENTO POR ID, CANAL SEGURO & DIFUSIÓN GLOBAL -->
+        <div class="glass-card central-card">
+          <div class="card-title">
+            <span>🛡️ Central, Enrutamiento ID & Canal Seguro</span>
+            <span id="rolePillBadge" style="font-size: 0.7rem; background: #0284c7; color: #fff; padding: 2px 7px; border-radius: 8px;">ROL: ---</span>
+          </div>
+
+          <!-- Selección de ID Destino y Enrutamiento vía Central -->
+          <div class="central-grid-row">
+            <label>🎯 ID Destino:
+              <select id="targetIdSelect" class="aero-select" disabled>
+                <option value="NODO_B">NODO_B</option>
+                <option value="NODO_A">NODO_A</option>
+                <option value="CENTRAL">CENTRAL</option>
+                <option value="ALL">ALL (Todos)</option>
+              </select>
+            </label>
+            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;" title="Envía el mensaje a la CENTRAL para que lo valide y reenvíe al ID destino">
+              <input type="checkbox" id="chkRouteViaCentral" disabled />
+              🔄 Enrutar vía CENTRAL
+            </label>
+          </div>
+
+          <!-- Crear y Desplazar Nodos a un Canal Seguro (Exclusivo CENTRAL) -->
+          <div class="central-grid-row" style="border-top: 1px dashed rgba(2,132,199,0.3); padding-top: 6px;">
+            <select id="secureChannelSelect" class="aero-select" style="flex: 1;" disabled>
+              <option value="0">CH_0 • 915.0 MHz (Sync 0x12)</option>
+              <option value="1" selected>CH_1 • 915.5 MHz (Sync 0x34)</option>
+              <option value="2">CH_2 • 916.0 MHz (Sync 0x56)</option>
+              <option value="3">CH_3 • 916.5 MHz (Sync 0x78)</option>
+            </select>
+            <select id="securePairSelect" class="aero-select" disabled>
+              <option value="NODO_A,NODO_B">Par: NODO_A ↔ NODO_B</option>
+              <option value="CENTRAL,NODO_A">Par: CENTRAL ↔ NODO_A</option>
+              <option value="CENTRAL,NODO_B">Par: CENTRAL ↔ NODO_B</option>
+            </select>
+            <button type="button" class="aero-btn btn-purple" id="btnShiftChannel" style="padding: 5px 10px; font-size: 0.74rem;" disabled>
+              🔐 Crear y Desplazar Canal
+            </button>
+          </div>
+
+          <!-- Mensaje Global Cifrado de la Central a ambos Nodos -->
+          <div class="central-grid-row" style="margin-bottom: 0; border-top: 1px dashed rgba(2,132,199,0.3); padding-top: 6px;">
+            <input
+              type="text"
+              id="globalBroadcastInput"
+              class="aero-text-input"
+              placeholder="📢 Mensaje Global de Central a NODO_A y NODO_B..."
+              style="padding: 5px 10px; font-size: 0.76rem;"
+              disabled
+            />
+            <button type="button" class="aero-btn btn-amber" id="btnSendGlobal" style="padding: 5px 10px; font-size: 0.74rem;" disabled>
+              🌐 Enviar Global
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. Llamadas + Zumbido MSN -->
+        <div class="glass-card">
+          <div class="card-title">
+            <span>📞 Central de Llamadas & Zumbido</span>
+            <span id="callTimer" style="font-family: monospace;">00:00</span>
+          </div>
+          <div class="call-status-box" id="callBox">
+            <div style="font-weight: 800; font-size: 0.9rem;" id="callStateText">Línea Libre</div>
+            <div style="font-size: 0.72rem; opacity: 0.8;" id="callSubText">Canal autenticado por HMAC-SHA256</div>
+          </div>
+          <div class="call-controls">
+            <button class="aero-btn" id="btnCall" disabled>Llamar</button>
+            <button class="aero-btn btn-green" id="btnAnswer" disabled>Contestar</button>
+            <button class="aero-btn btn-red" id="btnHangup" disabled>Colgar</button>
+            <button class="aero-btn btn-purple" id="btnNudge" disabled>📳 Zumbido</button>
+          </div>
+        </div>
+
+        <!-- 2. RADAR CALIBRADO EN CM / METROS -->
+        <div class="glass-card">
+          <div class="card-title">
+            <span>📡 Radar de Distancia Calibrado</span>
+            <span id="pingStats" style="font-size: 0.74rem;">RTT: -- ms</span>
+          </div>
+
+          <div class="radar-layout">
+            <div class="radar-box">
+              <canvas id="radarCanvas" width="112" height="112"></canvas>
+            </div>
+            <div class="radar-metrics">
+              <div class="distance-readout">
+                <div style="font-size: 0.64rem; color: #bae6fd;">DISTANCIA REAL ESTIMADA</div>
+                <div class="distance-meters" id="distMeters">-- cm</div>
+                <div style="font-size: 0.67rem;" id="distZoneText">Esperando paquetes...</div>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                <div class="foco-aero" id="pingFoco" title="Foco de Ping"></div>
+                <button class="aero-btn btn-amber" id="btnPingOnce" style="flex: 1; padding: 5px 8px;" disabled>
+                  ⚡ Ping Ahora
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="calib-bar">
+            <button type="button" class="mini-chip" id="btnCalib70cm" title="Ajusta el RSSI actual como 70 cm exactos">
+              🎯 Calibrar aquí = 70 cm
+            </button>
+            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+              <input type="checkbox" id="chkAutoPing" disabled />
+              Auto-Ping:
+              <input type="number" id="numPingSec" value="4" min="2" max="60" style="width: 42px; border-radius: 6px; border: 1px solid #38bdf8; text-align: center; font-weight: 800;" />s
+            </label>
+          </div>
+        </div>
+
+        <!-- 3. Control de LED Físico Remoto -->
+        <div class="glass-card">
+          <div class="card-title">
+            <span>💡 Control de LED Placa Remota</span>
+            <span id="remoteLedBadge" style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 8px; background: rgba(0,0,0,0.1);">APAGADO</span>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="aero-btn btn-green" id="btnLedOn" style="flex: 1;" disabled>Prender</button>
+            <button class="aero-btn btn-red" id="btnLedOff" style="flex: 1;" disabled>Apagar</button>
+            <button class="aero-btn btn-amber" id="btnLedSos" style="flex: 1;" disabled>🚨 SOS Morse</button>
+          </div>
+        </div>
+
+        <!-- 4. SNIFFER DE PAQUETES LORA EN VIVO + MODO HACKER -->
+        <div class="glass-card">
+          <div class="card-title">
+            <span>🕵️ Sniffer de Tramas LoRa en Vivo</span>
+            <span>Bloqueados: <strong id="blockedCount" style="color:#d90429;">0</strong></span>
+          </div>
+
+          <div class="sniffer-console" id="snifferConsole">
+            <div class="sniffer-entry">
+              [SNIFFER LISTO] Aquí verás cada paquete crudo en el aire (cifrado), saltos de canal, difusión global y su firma HMAC...
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 0.71rem; font-weight: 800;">
+            <span>🧪 Simular Ataque Intruso:</span>
+            <button type="button" class="mini-chip" id="btnClearSniffer">Limpiar Sniffer</button>
+          </div>
+          <div class="hacker-btns">
+            <button class="aero-btn btn-red" id="btnAtkHash" disabled>⚡ Hash Falso</button>
+            <button class="aero-btn btn-red" id="btnAtkReplay" disabled>🔁 Replay</button>
+            <button class="aero-btn btn-red" id="btnAtkSpoof" disabled>🕵️ Intruso</button>
+          </div>
+        </div>
+
+      </div>
+      <!-- FIN COLUMNA IZQUIERDA (PEGA LA PARTE HTML 2 JUSTO DEBAJO DE ESTA LÍNEA) -->
+
+
+<!-- COLUMNA DERECHA -->
+      <div class="glass-card right-panel">
+        <div class="aero-tabs">
+          <button class="tab-btn active" data-tab="tabChat">💬 Chat, Lienzo Bit-a-Bit & Pixel 16×16</button>
+          <button class="tab-btn" data-tab="tabDraw">✏️ Pizarra Coordenadas Pro</button>
+          <button class="tab-btn" data-tab="tabChess">♟️ Ajedrez LoRa</button>
+          <button class="tab-btn" data-tab="tabGato">❌⭕ Gato P2P</button>
+        </div>
+
+        <!-- PESTAÑA 1: CHAT + LIENZO BIT A BIT + PIXEL ART 16x16 + VOZ -->
+        <div class="tab-view active" id="tabChat">
+          <div class="chat-top-bar">
+            <div class="quick-bar-btns">
+              <span>Stickers:</span>
+              <button type="button" class="mini-chip btn-sticker" data-st="😎" disabled>😎</button>
+              <button type="button" class="mini-chip btn-sticker" data-st="🔥" disabled>🔥</button>
+              <button type="button" class="mini-chip btn-sticker" data-st="💀" disabled>💀</button>
+              <button type="button" class="mini-chip btn-sticker" data-st="🎉" disabled>🎉</button>
+              <button type="button" class="mini-chip btn-sticker" data-st="👽" disabled>👽</button>
+              <button type="button" class="mini-chip btn-sticker" data-st="❤️" disabled>❤️</button>
+            </div>
+            <div class="quick-bar-btns">
+              <span>Sonidos:</span>
+              <button type="button" class="mini-chip btn-sfx" data-sfx="FAIL" disabled>🎺 Fail</button>
+              <button type="button" class="mini-chip btn-sfx" data-sfx="COIN" disabled>🪙 Moneda</button>
+              <button type="button" class="mini-chip btn-sfx" data-sfx="SIREN" disabled>🚨 Sirena</button>
+              <button type="button" class="mini-chip btn-sfx" data-sfx="LASER" disabled>👾 Láser</button>
+            </div>
+          </div>
+
+          <div class="chat-history" id="chatHistory">
+            <div class="chat-bubble system">
+              Conecta tu placa BastWAN (`CENTRAL`, `NODO_A` o `NODO_B`). La <strong>CENTRAL</strong> puede crear y desplazar a los nodos a un <strong>Canal Físico Seguro</strong> con llave dinámica y enviar <strong>Mensajes Globales Cifrados</strong> a ambos nodos.
+            </div>
+          </div>
+
+          <!-- PANEL MEJORADO: PETICIÓN DE LIENZO DINÁMICO + FLUJO BIT A BIT -->
+          <div class="photo-sstv-drawer" id="photoSstvDrawer">
+            <div class="photo-preview-box">
+              <canvas id="photoQuantPreview" width="48" height="36"></canvas>
+            </div>
+
+            <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 7px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
+                <span style="font-size: 0.85rem; font-weight: 900; color: #033457;">
+                  📡 Transmisor de Lienzo Dinámico Bit a Bit (`[IMG_INIT]` ➔ `[IMG_BITS]`)
+                </span>
+                <button type="button" class="mini-chip" id="btnPickImageFile">📂 Elegir Foto de tu PC...</button>
+              </div>
+
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 0.74rem; font-weight: 800;">
+                <label>Tamaño Lienzo:
+                  <select id="sstvResSelect" class="aero-select" style="padding: 4px 7px;">
+                    <option value="24">24 px (Rápido)</option>
+                    <option value="36">36 px (Estándar)</option>
+                    <option value="48" selected>48 px (Alta Nitidez)</option>
+                    <option value="64">64 px (Lienzo Grande)</option>
+                  </select>
+                </label>
+
+                <label>Modo de Bits:
+                  <select id="sstvBppSelect" class="aero-select" style="padding: 4px 7px;">
+                    <option value="1">⚡ 1-Bit Binario Puro (8 px/byte • Ultra Rápido)</option>
+                    <option value="4" selected>🎨 4-Bits Paleta 16 Colores (2 px/byte)</option>
+                    <option value="6">🌈 6-Bits RGB-64 Colores Reales (1 px/byte)</option>
+                  </select>
+                </label>
+
+                <label>Proporción:
+                  <select id="sstvAspectSelect" class="aero-select" style="padding: 4px 7px;">
+                    <option value="ORIG" selected>📐 Original (W×H)</option>
+                    <option value="SQ">⬛ Cuadrada (1:1)</option>
+                  </select>
+                </label>
+              </div>
+
+              <div style="font-size: 0.72rem; color: #04598c; font-weight: 800; font-family: monospace;" id="sstvInfoText">
+                Calculando petición de lienzo y flujo de bits...
+              </div>
+
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="aero-btn btn-amber" id="btnLoadInto16Editor" style="padding: 6px 10px;">
+                  ✏️ Pasar a 16×16
+                </button>
+                <button type="button" class="aero-btn btn-green" id="btnTransmitPhotoLoRa" style="flex: 1; padding: 6px 12px;">
+                  🚀 1. Pedir Lienzo Remoto y Llenar Bit a Bit
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ESTUDIO PIXEL-ART 16x16 CON 16 COLORES Y PLANTILLAS -->
+          <div class="pixel-drawer" id="pixelDrawer">
+            <div class="pixel-grid-16" id="pixelGrid16"></div>
+
+            <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
+                <span style="font-size: 0.84rem; font-weight: 900; color: #033457;">🎨 Estudio Pixel-Art 16×16</span>
+                <div style="display: flex; gap: 4px;">
+                  <button type="button" class="tool-chip active" id="pxToolPen">✏️ Pincel</button>
+                  <button type="button" class="tool-chip" id="pxToolBucket">🪣 Rellenar</button>
+                  <button type="button" class="tool-chip" id="pxToolEraser">🧽 Borrar</button>
+                  <button type="button" class="mini-chip" id="btnImportPhotoTo16" title="Subir foto de tu PC directo a esta cuadrícula">📂 Subir Foto</button>
+                </div>
+              </div>
+
+              <div class="palette-16" id="palette16Container"></div>
+
+              <div style="display: flex; gap: 5px; flex-wrap: wrap; align-items: center;">
+                <span style="font-size: 0.74rem; font-weight: 800;">Plantillas:</span>
+                <button type="button" class="mini-chip" data-tpl="heart">❤️ Corazón</button>
+                <button type="button" class="mini-chip" data-tpl="alien">👾 Alien</button>
+                <button type="button" class="mini-chip" data-tpl="cat">🐱 Gatito</button>
+                <button type="button" class="mini-chip" data-tpl="shroom">🍄 Hongo</button>
+                <button type="button" class="mini-chip" data-tpl="smile">😎 Cool</button>
+              </div>
+
+              <div style="display: flex; gap: 8px; margin-top: 2px;">
+                <button type="button" class="aero-btn btn-amber" id="btnClearPixel16" style="padding: 5px 11px;">🗑️ Limpiar</button>
+                <button type="button" class="aero-btn btn-green" id="btnSendPixel16" style="flex: 1; padding: 6px 12px;">📤 Enviar Pixel-Art 16×16 (1 Paquete)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Barra inferior del Chat -->
+          <form class="chat-input-bar" id="chatForm">
+            <button type="button" class="aero-btn btn-purple" id="btnTogglePhotoSstv" title="Subir imagen con petición de lienzo y llenado bit a bit" disabled>📷 Lienzo Bit-a-Bit</button>
+            <button type="button" class="aero-btn btn-amber" id="btnTogglePixel" title="Abrir editor Pixel-Art 16x16" disabled>🎨 Pixel 16×16</button>
+            <input
+              type="text"
+              id="msgInput"
+              class="aero-text-input"
+              placeholder="Escribe tu mensaje aquí..."
+              autocomplete="off"
+              disabled
+            />
+            <select id="voiceEffectSelect" class="aero-select" title="Efecto de voz al reproducir">
+              <option value="NORM">🗣️ Voz Normal</option>
+              <option value="CHIP">🐿️ Voz Ardilla</option>
+              <option value="ROBO">🤖 Robot Grave</option>
+              <option value="FAST">⚡ Rápida</option>
+              <option value="SLOW">👻 Fantasma</option>
+            </select>
+            <button type="button" class="aero-btn btn-green" id="btnSendTTS" disabled>🔊 Voz</button>
+            <button type="submit" class="aero-btn" id="btnSendMsg" disabled>Enviar</button>
+          </form>
+        </div>
+
+        <!-- PESTAÑA 2: PIZARRA DE COORDENADAS PRO -->
+        <div class="tab-view" id="tabDraw">
+          <div class="draw-container">
+            <div class="draw-hud-bar">
+              <div>📍 Local: <span class="coord-pill" id="localCoordTxt">X: ---, Y: ---</span></div>
+              <div>📡 Pluma Remota: <span class="coord-pill" id="remoteCoordTxt">X: ---, Y: ---</span></div>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <button type="button" class="mini-chip" id="btnToggleDarkCanvas">🌙 Fondo Neón</button>
+                <button type="button" class="aero-btn btn-red" id="btnClearCoordCanvas" style="padding: 4px 10px; font-size: 0.74rem;" disabled>🗑️ Borrar Todo</button>
+              </div>
+            </div>
+
+            <div class="canvas-stage" id="canvasStage">
+              <canvas id="coordCanvas" width="700" height="430"></canvas>
+              <div class="remote-pen-cursor" id="remotePenCursor">✏️ NODO_B (0, 0)</div>
+            </div>
+
+            <div class="draw-toolbar">
+              <div style="display: flex; gap: 4px; flex-wrap: wrap;" id="drawToolsGroup">
+                <button type="button" class="tool-chip active" data-dtool="PEN">✏️ Lápiz</button>
+                <button type="button" class="tool-chip" data-dtool="LINE">📏 Línea</button>
+                <button type="button" class="tool-chip" data-dtool="RECT">⬛ Rectángulo</button>
+                <button type="button" class="tool-chip" data-dtool="CIRC">⭕ Círculo</button>
+                <button type="button" class="tool-chip" data-dtool="STAMP_STAR">⭐ Sello</button>
+                <button type="button" class="tool-chip" data-dtool="STAMP_HEART">❤️ Sello</button>
+                <button type="button" class="tool-chip" data-dtool="ERASE">🧽 Borrador</button>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 5px;" id="drawColorOrbs">
+                <div class="color-orb selected" data-idx="0" style="background: #0284c7;"></div>
+                <div class="color-orb" data-idx="1" style="background: #ef4444;"></div>
+                <div class="color-orb" data-idx="2" style="background: #22c55e;"></div>
+                <div class="color-orb" data-idx="3" style="background: #f59e0b;"></div>
+                <div class="color-orb" data-idx="4" style="background: #a855f7;"></div>
+                <div class="color-orb" data-idx="5" style="background: #ec4899;"></div>
+                <div class="color-orb" data-idx="6" style="background: #00f5d4;"></div>
+                <div class="color-orb" data-idx="7" style="background: #0f172a;"></div>
+              </div>
+
+              <select id="drawSizeSelect" class="aero-select">
+                <option value="3">3 px</option>
+                <option value="6" selected>6 px</option>
+                <option value="12">12 px</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- PESTAÑA 3: AJEDREZ P2P -->
+        <div class="tab-view" id="tabChess">
+          <div class="chess-layout">
+            <div class="chess-board" id="chessBoard"></div>
+            <div class="chess-sidebar">
+              <div style="font-weight: 900; font-size: 0.95rem; color: #033457;" id="chessMyColorBadge">
+                ♟️ Tu Color Asignado: ♔ BLANCAS (NODO_A)
+              </div>
+              <div style="font-size: 0.85rem; font-weight: 800; padding: 8px; border-radius: 10px; background: #e0f2fe;" id="chessTurnBanner">
+                Turno actual: ♔ Blancas
+              </div>
+              <div style="font-size: 0.74rem; color: #04598c; font-weight: 700;">
+                🔒 Bloqueo activo: Solo puedes mover las piezas de tu color cuando sea tu turno.
+              </div>
+              <div style="font-size: 0.76rem; font-weight: 800;">Historial de Jugadas:</div>
+              <div class="move-log" id="chessMoveLog">Partida lista.</div>
+              <div style="display: flex; flex-direction: column; gap: 6px; margin-top: auto;">
+                <button class="aero-btn btn-green" id="btnNewChessNormal" disabled>🔄 Nueva Partida (NODO_A=♔ / NODO_B=♚)</button>
+                <button class="aero-btn btn-purple" id="btnNewChessSwap" disabled>🔀 Nueva Partida (Invertir Blancas/Negras)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PESTAÑA 4: JUEGO DE GATO P2P -->
+        <div class="tab-view" id="tabGato">
+          <div class="gato-container">
+            <div style="text-align: center;">
+              <div style="font-size: 0.9rem; font-weight: 800; color: #0284c7; margin-bottom: 4px;" id="gatoMyRoleTxt">
+                Tu ficha asignada: ❌ (NODO_A)
+              </div>
+              <div style="font-size: 1.2rem; font-weight: 900;" id="gatoStatus">Turno de ❌</div>
+              <div style="font-size: 0.85rem; font-weight: 800; opacity: 0.85; margin-top: 4px;" id="gatoScore">
+                Marcador — ❌ NODO_A: 0 | ⭕ NODO_B: 0
+              </div>
+            </div>
+
+            <div class="gato-grid" id="gatoGrid"></div>
+
+            <button class="aero-btn btn-amber" id="btnResetGato" disabled>🔄 Nueva Ronda de Gato (Sincronizada)</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // ESTADO GLOBAL, NODO CENTRAL, CANAL SEGURO Y WEB SERIAL
+    // =========================================================================
+    let port = null;
+    let writer = null;
+    let serialBuffer = "";
+    let miNodoId = "NODO_A";
+    let destNodoId = "NODO_B";
+    let canalActualStr = "CH_0";
+    let freqActualStr = "915.0MHz";
+    let keyFingerprintStr = "--------";
+
+    let txQueue = [];
+    let isProcessingQueue = false;
+    let abortarColaSolicitado = false;
+    let lastTxTimestamp = 0;
+
+    // Sincronización ACK para evitar colisiones Half-Duplex en LoRa
+    let esperaTxHashResolver = null;
+    let esperaAckResolver = null;
+    let hashEsperandoAck = null;
+
+    let autoPingTimer = null;
+    let lastPingSentTime = 0;
+    let blockedAttacks = 0;
+
+    let rssiHistory = [];
+    let rssiAt70cm = -45;
+    let currentDistanceMeters = null;
+    let radarAngle = 0;
+    let radarBlipPulse = 0;
+
+    let audioCtx = null;
+    let ringInterval = null;
+    let callSeconds = 0;
+    let callDurationTimer = null;
+
+    const mainWindow            = document.getElementById("mainWindow");
+    const btnConnect            = document.getElementById("btnConnect");
+    const btnAbortQueue         = document.getElementById("btnAbortQueue");
+    const nodeIdentity          = document.getElementById("nodeIdentity");
+    const channelBadge          = document.getElementById("channelBadge");
+    const rolePillBadge         = document.getElementById("rolePillBadge");
+    const targetIdSelect        = document.getElementById("targetIdSelect");
+    const chkRouteViaCentral    = document.getElementById("chkRouteViaCentral");
+    const secureChannelSelect   = document.getElementById("secureChannelSelect");
+    const securePairSelect      = document.getElementById("securePairSelect");
+    const btnShiftChannel       = document.getElementById("btnShiftChannel");
+    const globalBroadcastInput  = document.getElementById("globalBroadcastInput");
+    const btnSendGlobal         = document.getElementById("btnSendGlobal");
+    const queueStatusPill       = document.getElementById("queueStatusPill");
+    const rssiDisplay           = document.getElementById("rssiDisplay");
+    const chatHistory           = document.getElementById("chatHistory");
+    const chatForm              = document.getElementById("chatForm");
+    const msgInput              = document.getElementById("msgInput");
+    const snifferConsole        = document.getElementById("snifferConsole");
+
+    // Pestañas
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-view").forEach(v => v.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    // =========================================================================
+    // CONTROLES DEL PANEL DE NODO CENTRAL, DESTINO POR ID Y CANAL SEGURO
+    // =========================================================================
+    function actualizarPanelCentralSegunRol() {
+      const esCentral = (miNodoId === "CENTRAL");
+      rolePillBadge.textContent = esCentral ? "👑 ROL: NODO CENTRAL" : `📡 ROL: ${miNodoId}`;
+      rolePillBadge.style.background = esCentral ? "#ca8a04" : "#0284c7";
+
+      // Ajustar opciones válidas en el selector de ID Destino (evitar enviarse a sí mismo)
+      Array.from(targetIdSelect.options).forEach(opt => {
+        opt.disabled = (opt.value === miNodoId);
+      });
+      if ([...targetIdSelect.options].some(o => o.value === destNodoId && !o.disabled)) {
+        targetIdSelect.value = destNodoId;
+      }
+
+      // Controles exclusivos de la CENTRAL (crear/desplazar canal y difusión global)
+      secureChannelSelect.disabled  = !esCentral;
+      securePairSelect.disabled     = !esCentral;
+      btnShiftChannel.disabled      = !esCentral;
+      globalBroadcastInput.disabled = !esCentral;
+      btnSendGlobal.disabled        = !esCentral;
+
+      // Enrutar vía Central solo aplica para NODO_A y NODO_B
+      chkRouteViaCentral.disabled   = esCentral;
+      if (esCentral) chkRouteViaCentral.checked = false;
+    }
+
+    targetIdSelect.addEventListener("change", () => {
+      const nuevoDestino = targetIdSelect.value;
+      destNodoId = nuevoDestino;
+      enviarComandoDirecto("CMD_TARGET:" + nuevoDestino);
+      agregarBurbujaSistema(`🎯 Destino de comunicación cambiado al ID: ${nuevoDestino}`);
+    });
+
+    btnShiftChannel.addEventListener("click", () => {
+      if (miNodoId !== "CENTRAL") {
+        agregarBurbujaSistema("⚠️ Solo la placa programada como CENTRAL puede crear y desplazar canales.");
+        return;
+      }
+      const ch = secureChannelSelect.value;
+      const par = securePairSelect.value;
+      enviarComandoDirecto(`CMD_CH_SHIFT:${ch}:${par}`);
+      agregarBurbujaSistema(`🔐 CENTRAL generando clave dinámica y desplazando a [${par}] al canal seguro CH_${ch}...`);
+    });
+
+    function dispararMensajeGlobalCentral() {
+      if (miNodoId !== "CENTRAL") return;
+      const texto = globalBroadcastInput.value.trim();
+      if (!texto) return;
+      enviarComandoDirecto("CMD_GLOBAL:" + texto);
+      globalBroadcastInput.value = "";
+    }
+
+    btnSendGlobal.addEventListener("click", dispararMensajeGlobalCentral);
+    globalBroadcastInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        dispararMensajeGlobalCentral();
+      }
+    });
+
+    // =========================================================================
+    // PALETAS Y CONVERSIÓN DE COLOR (1-BIT, 4-BITS Y 6-BITS RGB222)
+    // =========================================================================
+    const PALETA_16 = [
+      "#ffffff", "#0f172a", "#94a3b8", "#ef4444",
+      "#f97316", "#facc15", "#84cc16", "#16a34a",
+      "#06b6d4", "#0284c7", "#1d4ed8", "#9333ea",
+      "#d946ef", "#f472b6", "#78350f", "#fde68a"
+    ];
+
+    const PALETA_16_RGB = PALETA_16.map(hex => [
+      parseInt(hex.slice(1, 3), 16),
+      parseInt(hex.slice(3, 5), 16),
+      parseInt(hex.slice(5, 7), 16)
+    ]);
+
+    function colorMasCercanoPaleta16(r, g, b) {
+      let mejorIdx = 0;
+      let menorDist = Infinity;
+      for (let idx = 0; idx < 16; idx++) {
+        const [pr, pg, pb] = PALETA_16_RGB[idx];
+        const dr = r - pr, dg = g - pg, db = b - pb;
+        const dist = (dr * dr * 0.30) + (dg * dg * 0.59) + (db * db * 0.11);
+        if (dist < menorDist) {
+          menorDist = dist;
+          mejorIdx = idx;
+        }
+      }
+      return mejorIdx;
+    }
+
+    function rgbA6Bits(r, g, b) {
+      const r2 = Math.min(3, Math.max(0, Math.round((r / 255) * 3)));
+      const g2 = Math.min(3, Math.max(0, Math.round((g / 255) * 3)));
+      const b2 = Math.min(3, Math.max(0, Math.round((b / 255) * 3)));
+      return (r2 << 4) | (g2 << 2) | b2;
+    }
+
+    function bits6ARgb(val6) {
+      const r = ((val6 >> 4) & 0x03) * 85;
+      const g = ((val6 >> 2) & 0x03) * 85;
+      const b = (val6 & 0x03) * 85;
+      return [r, g, b];
+    }
+
+    function valorPixelACss(val, bpp) {
+      if (bpp === 1) return val ? "#ffffff" : "#0f172a";
+      if (bpp === 4) return PALETA_16[val & 0x0F] || "#0f172a";
+      const [r, g, b] = bits6ARgb(val & 0x3F);
+      return `rgb(${r},${g},${b})`;
+    }
+
+    // =========================================================================
+    // SINTETIZADOR DE VOZ OFFLINE CON EFECTOS GRACIOSOS (0 INTERNET)
+    // =========================================================================
+    const PERFILES_VOZ = {
+      NORM: { nombre: "🗣️ Normal",   pitch: 1.0, rate: 1.0 },
+      CHIP: { nombre: "🐿️ Ardilla",  pitch: 1.95, rate: 1.3 },
+      ROBO: { nombre: "🤖 Robot",    pitch: 0.25, rate: 0.82 },
+      FAST: { nombre: "⚡ Rápida",   pitch: 1.25, rate: 1.85 },
+      SLOW: { nombre: "👻 Fantasma", pitch: 0.45, rate: 0.55 }
+    };
+
+    function hablarConEfecto(texto, modo = "NORM") {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const cfg = PERFILES_VOZ[modo] || PERFILES_VOZ.NORM;
+      const utter = new SpeechSynthesisUtterance(texto);
+      utter.lang = "es-MX";
+      utter.pitch = cfg.pitch;
+      utter.rate = cfg.rate;
+
+      const voces = window.speechSynthesis.getVoices();
+      const vozEs = voces.find(v => v.lang.toLowerCase().startsWith("es"));
+      if (vozEs) utter.voice = vozEs;
+
+      window.speechSynthesis.speak(utter);
+    }
+
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+
+    // =========================================================================
+    // CIFRADO COMPACTO EN UN SOLO PASO
+    // =========================================================================
+    const LLAVE_CIFRADO = "AeroLoRaCipher2026";
+
+    function cifrarCompacto(textoPlano) {
+      const bytes = new TextEncoder().encode(textoPlano);
+      let bin = "";
+      for (let i = 0; i < bytes.length; i++) {
+        const k = LLAVE_CIFRADO.charCodeAt(i % LLAVE_CIFRADO.length);
+        const b = bytes[i] ^ k ^ ((i * 13) & 0xFF);
+        bin += String.fromCharCode(b);
+      }
+      return "E64:" + btoa(bin);
+    }
+
+    function descifrarCompacto(carga) {
+      if (!carga.startsWith("E64:")) return carga;
+      try {
+        const bin = atob(carga.substring(4));
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) {
+          const k = LLAVE_CIFRADO.charCodeAt(i % LLAVE_CIFRADO.length);
+          bytes[i] = bin.charCodeAt(i) ^ k ^ ((i * 13) & 0xFF);
+        }
+        return new TextDecoder().decode(bytes);
+      } catch (e) {
+        return carga;
+      }
+    }
+
+    function cifrarPixeles16UnPaso(arr256) {
+      let binCifrado = "";
+      for (let i = 0; i < 128; i++) {
+        const rawByte = ((arr256[i * 2] & 0x0F) << 4) | (arr256[i * 2 + 1] & 0x0F);
+        const k = LLAVE_CIFRADO.charCodeAt(i % LLAVE_CIFRADO.length);
+        const encByte = rawByte ^ k ^ ((i * 19) & 0xFF);
+        binCifrado += String.fromCharCode(encByte);
+      }
+      return "PX64:" + btoa(binCifrado);
+    }
+
+    function descifrarPixeles16UnPaso(tramaPX64) {
+      const b64 = tramaPX64.substring(5);
+      const bin = atob(b64);
+      const arr256 = new Array(256).fill(0);
+      for (let i = 0; i < 128 && i < bin.length; i++) {
+        const k = LLAVE_CIFRADO.charCodeAt(i % LLAVE_CIFRADO.length);
+        const rawByte = bin.charCodeAt(i) ^ k ^ ((i * 19) & 0xFF);
+        arr256[i * 2]     = (rawByte >> 4) & 0x0F;
+        arr256[i * 2 + 1] = rawByte & 0x0F;
+      }
+      return arr256;
+    }
+
+    // =========================================================================
+    // CONSOLA SNIFFER DE PAQUETES EN TIEMPO REAL
+    // =========================================================================
+    function registrarEnSniffer(direccion, rssi, tramaCruda, textoClaro, estadoHash) {
+      const div = document.createElement("div");
+      div.className = "sniffer-entry";
+      const hora = new Date().toLocaleTimeString([], { hour12: false });
+      const claseTag = direccion === "TX" ? "tag-tx" : (direccion === "ATK" ? "tag-atk" : "tag-rx");
+
+      div.innerHTML =
+        `<span class="${claseTag}">[${hora} ${direccion}]</span> ` +
+        `<span>(${rssi} dBm | ${estadoHash})</span><br/>` +
+        `<span style="color:#94a3b8;">AIRE:</span> ${tramaCruda}<br/>` +
+        `<span style="color:#a7f3d0;">CLARO:</span> ${textoClaro}`;
+
+      snifferConsole.prepend(div);
+      while (snifferConsole.children.length > 22) {
+        snifferConsole.removeChild(snifferConsole.lastChild);
+      }
+    }
+
+    document.getElementById("btnClearSniffer").addEventListener("click", () => {
+      snifferConsole.innerHTML = "";
+    });
+
+    // =========================================================================
+    // RADAR CALIBRADO EN CM Y METROS
+    // =========================================================================
+    const radarCanvas = document.getElementById("radarCanvas");
+    const rCtx = radarCanvas.getContext("2d");
+    const distMeters = document.getElementById("distMeters");
+    const distZoneText = document.getElementById("distZoneText");
+
+    function obtenerRssiEstabilizado(nuevoRssi) {
+      rssiHistory.push(nuevoRssi);
+      if (rssiHistory.length > 5) rssiHistory.shift();
+      const copia = [...rssiHistory].sort((a, b) => a - b);
+      return copia[Math.floor(copia.length / 2)];
+    }
+
+    function calcularDistanciaMetros(rssiFiltrado) {
+      const n = 2.5;
+      const d = 0.70 * Math.pow(10, (rssiAt70cm - rssiFiltrado) / (10 * n));
+      return Math.max(0.10, Math.min(999, d));
+    }
+
+    function actualizarRssiYRadar(rssiValor) {
+      const num = parseInt(rssiValor);
+      if (isNaN(num)) return;
+
+      const rssiEstable = obtenerRssiEstabilizado(num);
+      currentDistanceMeters = calcularDistanciaMetros(rssiEstable);
+      radarBlipPulse = 1.0;
+
+      rssiDisplay.textContent = `Señal: ${num} dBm`;
+
+      if (currentDistanceMeters < 1.0) {
+        const cm = Math.round(currentDistanceMeters * 100);
+        distMeters.textContent = `${cm} cm (${currentDistanceMeters.toFixed(2)} m)`;
+      } else {
+        distMeters.textContent = `${currentDistanceMeters.toFixed(2)} m`;
+      }
+
+      if (currentDistanceMeters <= 1.2) {
+        distZoneText.textContent = `🟢 En mesa / Muy cerca (${rssiEstable} dBm)`;
+      } else if (currentDistanceMeters <= 12) {
+        distZoneText.textContent = `🩵 Media distancia (${rssiEstable} dBm)`;
+      } else {
+        distZoneText.textContent = `🟠 Lejos / Con muros (${rssiEstable} dBm)`;
+      }
+    }
+
+    document.getElementById("btnCalib70cm").addEventListener("click", () => {
+      if (rssiHistory.length === 0) {
+        enviarComandoDirecto("CMD_PING:" + Date.now());
+        agregarBurbujaSistema("🎯 Enviando Ping para calibrar a 70 cm...");
+        setTimeout(() => {
+          if (rssiHistory.length > 0) {
+            rssiAt70cm = rssiHistory[rssiHistory.length - 1];
+            actualizarRssiYRadar(rssiAt70cm);
+            agregarBurbujaSistema(`✅ Radar calibrado: ${rssiAt70cm} dBm equivale ahora a 70 cm (0.70 m).`);
+          }
+        }, 600);
+      } else {
+        rssiAt70cm = rssiHistory[rssiHistory.length - 1];
+        actualizarRssiYRadar(rssiAt70cm);
+        agregarBurbujaSistema(`✅ Radar calibrado: ${rssiAt70cm} dBm fijado exactamente como 70 cm (0.70 m).`);
+      }
+    });
+
+    function dibujarRadarLoop() {
+      const w = radarCanvas.width, h = radarCanvas.height;
+      const cx = w / 2, cy = h / 2, maxR = cx - 5;
+      rCtx.clearRect(0, 0, w, h);
+
+      rCtx.strokeStyle = "rgba(74, 222, 128, 0.32)";
+      rCtx.lineWidth = 1;
+      [0.33, 0.66, 1.0].forEach(frac => {
+        rCtx.beginPath(); rCtx.arc(cx, cy, maxR * frac, 0, Math.PI * 2); rCtx.stroke();
+      });
+
+      rCtx.beginPath();
+      rCtx.moveTo(cx, 3); rCtx.lineTo(cx, h - 3);
+      rCtx.moveTo(3, cy); rCtx.lineTo(w - 3, cy);
+      rCtx.stroke();
+
+      radarAngle = (radarAngle + 0.045) % (Math.PI * 2);
+      const grad = rCtx.createConicGradient(radarAngle - 0.8, cx, cy);
+      grad.addColorStop(0, "rgba(0, 255, 128, 0)");
+      grad.addColorStop(0.15, "rgba(74, 222, 128, 0.45)");
+      grad.addColorStop(0.16, "rgba(0, 255, 128, 0)");
+      rCtx.fillStyle = grad;
+      rCtx.beginPath(); rCtx.arc(cx, cy, maxR, 0, Math.PI * 2); rCtx.fill();
+
+      rCtx.fillStyle = "#38bdf8";
+      rCtx.beginPath(); rCtx.arc(cx, cy, 4, 0, Math.PI * 2); rCtx.fill();
+
+      if (currentDistanceMeters !== null) {
+        const normDist = Math.min(1, Math.log10(currentDistanceMeters + 1) / 1.6);
+        const radiusPos = 9 + normDist * (maxR - 13);
+        const bx = cx + Math.cos(-0.65) * radiusPos;
+        const by = cy + Math.sin(-0.65) * radiusPos;
+
+        if (radarBlipPulse > 0.05) {
+          rCtx.strokeStyle = `rgba(74, 222, 128, ${radarBlipPulse})`;
+          rCtx.lineWidth = 2;
+          rCtx.beginPath(); rCtx.arc(bx, by, 5 + (1 - radarBlipPulse) * 11, 0, Math.PI * 2); rCtx.stroke();
+          radarBlipPulse *= 0.94;
+        }
+
+        rCtx.fillStyle = "#4ade80";
+        rCtx.shadowColor = "#00ff66";
+        rCtx.shadowBlur = 9;
+        rCtx.beginPath(); rCtx.arc(bx, by, 5, 0, Math.PI * 2); rCtx.fill();
+        rCtx.shadowBlur = 0;
+      }
+      requestAnimationFrame(dibujarRadarLoop);
+    }
+    requestAnimationFrame(dibujarRadarLoop);
+
+    // =========================================================================
+    // SONIDOS Y SOUNDBOARD SINTETIZADO
+    // =========================================================================
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function sonarNota(frecuencia, duracionMs, tipo = "sine", ganancia = 0.14) {
+      initAudio();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = tipo;
+      osc.frequency.setValueAtTime(frecuencia, audioCtx.currentTime);
+      gain.gain.setValueAtTime(ganancia, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duracionMs / 1000);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duracionMs / 1000);
+    }
+
+    function reproducirEfectoSoundboard(codigo) {
+      if (codigo === "FAIL") {
+        sonarNota(392, 220, "sawtooth", 0.18);
+        setTimeout(() => sonarNota(370, 220, "sawtooth", 0.18), 240);
+        setTimeout(() => sonarNota(349, 220, "sawtooth", 0.18), 480);
+        setTimeout(() => sonarNota(330, 500, "sawtooth", 0.2), 720);
+      } else if (codigo === "COIN") {
+        sonarNota(987.77, 90, "square", 0.15);
+        setTimeout(() => sonarNota(1318.51, 280, "square", 0.15), 95);
+      } else if (codigo === "SIREN") {
+        [0, 200, 400, 600].forEach((t, i) => {
+          setTimeout(() => sonarNota(i % 2 === 0 ? 650 : 920, 180, "triangle", 0.2), t);
+        });
+      } else if (codigo === "LASER") {
+        [1400, 1100, 850, 600, 400, 250].forEach((f, i) => {
+          setTimeout(() => sonarNota(f, 35, "sawtooth", 0.16), i * 32);
+        });
+      }
+    }
+
+    function ejecutarEfectoZumbidoMSN() {
+      mainWindow.classList.remove("shake-nudge");
+      void mainWindow.offsetWidth;
+      mainWindow.classList.add("shake-nudge");
+      sonarNota(380, 90, "sawtooth", 0.22);
+      setTimeout(() => sonarNota(290, 90, "sawtooth", 0.22), 100);
+      setTimeout(() => sonarNota(420, 140, "square", 0.2), 200);
+    }
+
+    // =========================================================================
+    // COLA DE TRANSMISIÓN STOP-AND-WAIT CON ACK Y ENRUTAMIENTO VÍA CENTRAL
+    // =========================================================================
+    async function enviarComandoDirecto(cmd) {
+      if (!writer) return;
+      lastTxTimestamp = Date.now();
+      await writer.write(cmd + "\n");
+    }
+
+    function obtenerPrefijoEnvioMsg() {
+      if (chkRouteViaCentral && chkRouteViaCentral.checked && miNodoId !== "CENTRAL") {
+        return "CMD_VIA_CENTRAL:";
+      }
+      return "CMD_MSG:";
+    }
+
+    function encolarMensajeSeguroLoRa(payloadClaro, maxRetries = 3) {
+      const cifrado = cifrarCompacto(payloadClaro);
+      const prefijo = obtenerPrefijoEnvioMsg();
+      txQueue.push({ cmd: prefijo + cifrado, retriesLeft: maxRetries });
+      procesarColaTx();
+    }
+
+    function encolarTramaCrudaMsg(tramaYaCifrada, maxRetries = 3) {
+      const prefijo = obtenerPrefijoEnvioMsg();
+      txQueue.push({ cmd: prefijo + tramaYaCifrada, retriesLeft: maxRetries });
+      procesarColaTx();
+    }
+
+    btnAbortQueue.addEventListener("click", () => {
+      abortarColaSolicitado = true;
+      txQueue = [];
+      if (esperaTxHashResolver) esperaTxHashResolver(null);
+      if (esperaAckResolver) esperaAckResolver(false);
+      btnAbortQueue.style.display = "none";
+      queueStatusPill.textContent = "Canal LoRa: Envío abortado";
+      agregarBurbujaSistema("⏹️ Cola de transmisión de imagen cancelada.");
+    });
+
+    async function enviarYEsperarAckLoRa(cmd, timeoutAckMs = 1450) {
+      const promesaHashLocal = new Promise(resolve => {
+        const timer = setTimeout(() => {
+          esperaTxHashResolver = null;
+          resolve(null);
+        }, 750);
+        esperaTxHashResolver = (hashGenerado) => {
+          clearTimeout(timer);
+          esperaTxHashResolver = null;
+          resolve(hashGenerado);
+        };
+      });
+
+      await enviarComandoDirecto(cmd);
+      const hashTx = await promesaHashLocal;
+
+      if (!hashTx || abortarColaSolicitado) {
+        await new Promise(r => setTimeout(r, 350));
+        return false;
+      }
+
+      // Si el destino es global (ALL) o vía Relay Central, no bloqueamos esperando ACK directo P2P
+      if (destNodoId === "ALL" || cmd.startsWith("CMD_VIA_CENTRAL:")) {
+        await new Promise(r => setTimeout(r, 220));
+        return true;
+      }
+
+      hashEsperandoAck = hashTx;
+      const ackRecibido = await new Promise(resolve => {
+        const timer = setTimeout(() => {
+          esperaAckResolver = null;
+          hashEsperandoAck = null;
+          resolve(false);
+        }, timeoutAckMs);
+
+        esperaAckResolver = (exito) => {
+          clearTimeout(timer);
+          esperaAckResolver = null;
+          hashEsperandoAck = null;
+          resolve(exito);
+        };
+      });
+
+      return ackRecibido;
+    }
+
+    async function procesarColaTx() {
+      if (isProcessingQueue) return;
+      isProcessingQueue = true;
+      abortarColaSolicitado = false;
+
+      while (txQueue.length > 0 && !abortarColaSolicitado) {
+        btnAbortQueue.style.display = txQueue.length > 1 ? "inline-block" : "none";
+        const item = txQueue[0];
+        const cmd = typeof item === "string" ? item : item.cmd;
+        let retriesLeft = typeof item === "string" ? 2 : item.retriesLeft;
+
+        queueStatusPill.textContent = `Transmitiendo (${txQueue.length} paq)...`;
+
+        const confirmado = await enviarYEsperarAckLoRa(cmd, 1450);
+
+        if (abortarColaSolicitado) break;
+
+        if (confirmado) {
+          txQueue.shift();
+          await new Promise(r => setTimeout(r, 160));
+        } else if (retriesLeft > 0) {
+          item.retriesLeft = retriesLeft - 1;
+          queueStatusPill.textContent = `Reintentando bloque (${txQueue.length} pend)...`;
+          await new Promise(r => setTimeout(r, 280 + Math.floor(Math.random() * 180)));
+        } else {
+          txQueue.shift();
+          await new Promise(r => setTimeout(r, 200));
+        }
+      }
+
+      btnAbortQueue.style.display = "none";
+      queueStatusPill.textContent = "Canal LoRa: Libre";
+      isProcessingQueue = false;
+    }
+
+    btnConnect.addEventListener("click", async () => {
+      initAudio();
+      if (!("serial" in navigator)) {
+        alert("Usa Chrome, Brave, Chromium o Edge para conectar por Web Serial.");
+        return;
+      }
+      try {
+        port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+
+        const textEncoder = new TextEncoderStream();
+        textEncoder.readable.pipeTo(port.writable);
+        writer = textEncoder.writable.getWriter();
+
+        habilitarTodo(true);
+        btnConnect.textContent = "Placa Conectada";
+        btnConnect.classList.add("btn-green");
+
+        await enviarComandoDirecto("CMD_INFO");
+        leerPuertoSerialLoop();
+      } catch (err) {
+        agregarBurbujaSistema("No se pudo abrir el puerto USB: " + err.message);
+      }
+    });
+
+    async function leerPuertoSerialLoop() {
+      const textDecoder = new TextDecoderStream();
+      port.readable.pipeTo(textDecoder.writable);
+      const reader = textDecoder.readable.getReader();
+
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          if (value) {
+            serialBuffer += value;
+            let lineas = serialBuffer.split("\n");
+            serialBuffer = lineas.pop();
+            for (let l of lineas) procesarEventoDesdePlaca(l.trim());
+          }
+        }
+      } catch (error) {
+        agregarBurbujaSistema("Conexión USB desconectada.");
+      }
+    }
+
+    function habilitarTodo(activo) {
+      document.querySelectorAll("button, input, select").forEach(el => {
+        if (el.id !== "btnConnect" && el.id !== "btnAnswer" && el.id !== "btnHangup" && el.id !== "btnAbortQueue") {
+          el.disabled = !activo;
+        }
+      });
+    }
+
+    // =========================================================================
+    // PROCESAMIENTO DE EVENTOS DESDE LA BASTWAN (INCLUYE CENTRAL, CANAL Y GLOBAL)
+    // =========================================================================
+    function procesarEventoDesdePlaca(linea) {
+      if (!linea) return;
+      const partes = linea.split("|");
+      const evento = partes[0];
+
+      if (evento === "SYS_INFO") {
+        miNodoId = partes[1] || "NODO_A";
+        destNodoId = partes[2] || "NODO_B";
+        canalActualStr = partes[3] || "CH_0";
+        freqActualStr = partes[4] || "915.0MHz";
+        keyFingerprintStr = partes[5] || "--------";
+
+        nodeIdentity.textContent = `Placa: ${miNodoId} ➔ Destino activo: ${destNodoId}`;
+        channelBadge.textContent = `🔒 ${canalActualStr} (${freqActualStr}) | Key: ${keyFingerprintStr}`;
+
+        actualizarPanelCentralSegunRol();
+        configurarIdentidadEnJuegos();
+        agregarBurbujaSistema(`✅ ${miNodoId} enlazado con ${destNodoId} en ${canalActualStr} (${freqActualStr}) [Clave Hash: ${keyFingerprintStr}].`);
+      }
+      else if (evento === "SYS_CH_CHANGED") {
+        const ch = partes[1];
+        const mhz = partes[2];
+        const sw = partes[3];
+        const kfp = partes[4];
+        channelBadge.textContent = `🔒 ${ch} (${mhz}) | Key: ${kfp}`;
+        sonarNota(880, 120, "sine", 0.16);
+        setTimeout(() => sonarNota(1318.5, 190, "triangle", 0.18), 130);
+        agregarBurbujaSistema(`🔐 Salto de Canal Seguro completado: Sintonizado en ${ch} (${mhz}, SyncWord ${sw}) con nueva clave de cifrado [${kfp}].`);
+      }
+      else if (evento === "RX_CH_SHIFT") {
+        const firma = partes[1];
+        const rssi = partes[2];
+        const nuevoCh = partes[3];
+        const nuevoPar = partes[4];
+        actualizarRssiYRadar(rssi);
+        registrarEnSniffer("RX", rssi, `CENTRAL|ALL|CH_SHIFT|${nuevoCh}`, `Orden de CENTRAL: Desplazar a ${nuevoCh} con ${nuevoPar}`, `✓ MASTER HMAC:${firma}`);
+      }
+      else if (evento === "RX_GLOBAL") {
+        const firma = partes[1];
+        const rssi = partes[2];
+        const nonce = partes[3];
+        const msgGlobal = partes.slice(4).join("|");
+        actualizarRssiYRadar(rssi);
+        registrarEnSniffer("RX", rssi, `CENTRAL|ALL|${nonce}|GLOBAL|[HEX_CIFRADO]|${firma}`, `📢 GLOBAL: ${msgGlobal}`, `✓ MASTER HMAC:${firma}`);
+        sonarNota(783.99, 140, "square", 0.16);
+        setTimeout(() => sonarNota(1046.5, 220, "square", 0.18), 150);
+        agregarBurbujaGlobalCentral("peer", msgGlobal, firma, `${rssi} dBm`);
+      }
+      else if (evento === "SYS_RELAY") {
+        const ruta = partes[1];
+        const firma = partes[2];
+        const rssi = partes[3];
+        actualizarRssiYRadar(rssi);
+        registrarEnSniffer("RX", rssi, `RELAY|${ruta}`, `🔄 CENTRAL enrutó paquete por ID (${ruta})`, `✓ HMAC:${firma}`);
+        agregarBurbujaSistema(`🔄 CENTRAL reenvió paquete autenticado: ${ruta} (${rssi} dBm)`);
+      }
+      else if (evento === "RX_MONITOR") {
+        const orig = partes[1];
+        const dest = partes[2];
+        const tipo = partes[3];
+        const firma = partes[4];
+        const rssi = partes[5];
+        const carga = partes.slice(6).join("|");
+        actualizarRssiYRadar(rssi);
+        const claro = carga.startsWith("E64:") ? descifrarCompacto(carga) : carga;
+        registrarEnSniffer("RX", rssi, `${orig}|${dest}|${tipo}|${carga}|${firma}`, `👁️ [MONITOR CENTRAL ${orig}➔${dest}]: ${claro}`, `✓ HMAC:${firma}`);
+      }
+      else if (evento === "SYS_TX") {
+        const tipo    = partes[1];
+        const firma   = partes[2];
+        const nonce   = partes[3];
+        const payload = partes.slice(4).join("|");
+
+        if (tipo === "GLOBAL") {
+          registrarEnSniffer("TX", "--", `CENTRAL|ALL|${nonce}|GLOBAL|[CIFRADO_SHA256]|${firma}`, `📢 GLOBAL: ${payload}`, `MASTER HMAC:${firma}`);
+          agregarBurbujaGlobalCentral("me", payload, firma, "Difusión Global Enviada");
+        }
+        else if (tipo === "CH_SHIFT") {
+          registrarEnSniffer("TX", "--", `CENTRAL|ALL|${nonce}|CH_SHIFT|[TICKET_CIFRADO]|${firma}`, `🔐 Desplazamiento de Canal: ${payload}`, `MASTER HMAC:${firma}`);
+        }
+        else if (tipo === "MSG" || tipo === "RELAY") {
+          if (esperaTxHashResolver) {
+            esperaTxHashResolver(firma);
+          }
+          const cargaReal = (tipo === "RELAY" && payload.includes(":")) ? payload.substring(payload.indexOf(":") + 1) : payload;
+          if (cargaReal.startsWith("PX64:")) {
+            registrarEnSniffer("TX", "--", `${miNodoId}|${destNodoId}|${nonce}|${tipo}|${cargaReal}|${firma}`, "[Imagen Pixel-Art 16×16 Cifrada]", `HMAC:${firma}`);
+            agregarBurbujaRica("me", cargaReal, firma, "Enviado");
+          } else {
+            const claro = descifrarCompacto(cargaReal);
+            registrarEnSniffer("TX", "--", `${miNodoId}|${destNodoId}|${nonce}|${tipo}|${cargaReal}|${firma}`, claro, `HMAC:${firma}`);
+            mostrarMensajeSalienteEnChat(claro, firma);
+          }
+        }
+      }
+      else if (evento === "RX_MSG") {
+        const firma   = partes[1];
+        const rssi    = partes[2];
+        const nonce   = partes[3];
+        const payload = partes.slice(4).join("|");
+        actualizarRssiYRadar(rssi);
+
+        if (payload.startsWith("PX64:")) {
+          registrarEnSniffer("RX", rssi, `${destNodoId}|${miNodoId}|${nonce}|MSG|${payload}|${firma}`, "[Imagen Pixel-Art 16×16 Cifrada]", `✓ HMAC:${firma}`);
+          sonarNota(987.77, 110, "sine", 0.12);
+          agregarBurbujaRica("peer", payload, firma, `${rssi} dBm`);
+        } else {
+          const claro = descifrarCompacto(payload);
+          registrarEnSniffer("RX", rssi, `${destNodoId}|${miNodoId}|${nonce}|MSG|${payload}|${firma}`, claro, `✓ HMAC:${firma}`);
+          procesarPayloadEntrante(claro, firma, rssi);
+        }
+      }
+      else if (evento === "RX_MSG_ACK") {
+        const firmaConfirmada = partes[1];
+        const rssi = partes[2];
+        actualizarRssiYRadar(rssi);
+
+        if (esperaAckResolver && hashEsperandoAck === firmaConfirmada) {
+          esperaAckResolver(true);
+        }
+
+        const badge = document.getElementById("ack-" + firmaConfirmada);
+        if (badge) {
+          badge.textContent = "✓✓ Entregado y Verificado";
+          badge.classList.add("verified");
+        }
+      }
+      else if (evento === "RX_NUDGE") {
+        const emisor = partes[3] || destNodoId;
+        actualizarRssiYRadar(partes[2]);
+        registrarEnSniffer("RX", partes[2], `${emisor}|NUDGE|${partes[1]}`, "📳 ZUMBIDO MSN", "✓ HMAC OK");
+        ejecutarEfectoZumbidoMSN();
+        agregarBurbujaSistema(`📳 ¡${emisor} sacudió tu pantalla con un Zumbido! (${partes[2]} dBm)`);
+      }
+      else if (evento === "RX_PING") {
+        actualizarRssiYRadar(partes[2]);
+        encenderFocoPing();
+      }
+      else if (evento === "RX_PONG") {
+        const rtt = lastPingSentTime ? (Date.now() - lastPingSentTime) : "--";
+        actualizarRssiYRadar(partes[2]);
+        document.getElementById("pingStats").textContent = `RTT: ${rtt} ms`;
+        encenderFocoPing();
+      }
+      else if (evento === "RX_LED") {
+        const emisor = partes[4] || destNodoId;
+        actualizarRssiYRadar(partes[3]);
+        agregarBurbujaSistema(`💡 ${emisor} puso tu LED físico en: ${partes[1]}`);
+      }
+      else if (evento === "RX_LED_ACK") {
+        const estado = partes[1];
+        actualizarRssiYRadar(partes[3]);
+        const b = document.getElementById("remoteLedBadge");
+        b.textContent = estado === "OFF" ? "APAGADO" : estado;
+        b.style.background = estado === "OFF" ? "rgba(0,0,0,0.1)" : "#4cd964";
+      }
+      else if (evento === "RX_CALL_REQ") {
+        actualizarRssiYRadar(partes[2]);
+        mostrarLlamadaEntrante(partes[1]);
+      }
+      else if (evento === "RX_CALL_ACC") {
+        actualizarRssiYRadar(partes[2]);
+        iniciarLlamadaActiva();
+      }
+      else if (evento === "RX_CALL_END") {
+        actualizarRssiYRadar(partes[2]);
+        finalizarLlamadaUI("Llamada finalizada");
+      }
+      else if (evento === "SYS_ATK_SENT") {
+        registrarEnSniffer("ATK", "TX", partes.slice(2).join("|"), `Simulación enviada: ${partes[1]}`, "ATAQUE DEMO");
+      }
+      else if (evento === "SEC_ALERT") {
+        blockedAttacks++;
+        document.getElementById("blockedCount").textContent = blockedAttacks;
+        sonarNota(200, 400, "sawtooth", 0.24);
+        registrarEnSniffer("ATK", partes[2], partes.slice(3).join("|"), `BLOQUEADO: ${partes[1]}`, "❌ RECHAZADO");
+        agregarAlertaSeguridad(`INTRUSIÓN BLOQUEADA [${partes[1]}] (${partes[2]} dBm) — ${partes.slice(3).join("|")}`);
+      }
+    }
+
+    function agregarBurbujaGlobalCentral(quien, textoGlobal, hash, infoExtra) {
+      const div = document.createElement("div");
+      div.className = "chat-bubble global-broadcast";
+      const hora = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      div.innerHTML =
+        `<div style="font-size:0.76rem; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px;">👑 DIFUSIÓN GLOBAL DE LA CENTRAL (NODO_A + NODO_B):</div>` +
+        `<div style="font-size:0.96rem;">${textoGlobal}</div>` +
+        `<div class="bubble-meta"><span>${hora}</span> • <span>${infoExtra}</span> • <span class="hash-pill">MASTER HMAC: ${hash}</span></div>`;
+      chatHistory.appendChild(div);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+    // FIN PARTE HTML 2 (PEGA LA PARTE HTML 3 JUSTO DEBAJO DE ESTA LÍNEA)
+// =========================================================================
+    // ENRUTADOR DE MENSAJES (LIENZO BIT A BIT CON AUTORREPARACIÓN, VOZ, JUEGOS)
+    // =========================================================================
+    function mostrarMensajeSalienteEnChat(claro, firma) {
+      if (claro.startsWith("[CHESS]") || claro.startsWith("[GATO]") || claro.startsWith("[DRAW]")) return;
+      if (claro.startsWith("[IMG_EOF]") || claro.startsWith("[IMG_NACK]")) return;
+      if (claro.startsWith("[IMG_INIT]")) {
+        inicializarLienzoRemotoBitABit("me", claro.substring(10), firma, `Petición de Lienzo ➔ ${destNodoId}`);
+        return;
+      }
+      if (claro.startsWith("[IMG_BITS]")) {
+        recibirBloqueBitsEnLienzo("me", claro.substring(10), firma, `Transmitiendo bits ➔ ${destNodoId}`);
+        return;
+      }
+      const viaTxt = (chkRouteViaCentral && chkRouteViaCentral.checked) ? `Enviado vía CENTRAL ➔ ${destNodoId}` : `Enviado ➔ ${destNodoId}`;
+      agregarBurbujaRica("me", claro, firma, viaTxt);
+    }
+
+    function procesarPayloadEntrante(claro, firma, rssi) {
+      if (claro.startsWith("[CHESS]")) {
+        procesarComandoRemotoAjedrez(claro.substring(7));
+        return;
+      }
+      if (claro.startsWith("[GATO]")) {
+        procesarComandoRemotoGato(claro.substring(6));
+        return;
+      }
+      if (claro.startsWith("[DRAW]")) {
+        procesarComandoRemotoDibujo(claro.substring(6));
+        return;
+      }
+      if (claro.startsWith("[IMG_INIT]")) {
+        inicializarLienzoRemotoBitABit("peer", claro.substring(10), firma, `${rssi} dBm`);
+        return;
+      }
+      if (claro.startsWith("[IMG_BITS]")) {
+        recibirBloqueBitsEnLienzo("peer", claro.substring(10), firma, `${rssi} dBm`);
+        return;
+      }
+      if (claro.startsWith("[IMG_EOF]")) {
+        verificarIntegridadLienzoRecibido("peer", claro.substring(9));
+        return;
+      }
+      if (claro.startsWith("[IMG_NACK]")) {
+        retransmitirBloquesFaltantesSolicitados(claro.substring(10));
+        return;
+      }
+
+      if (claro.startsWith("[TTS:")) {
+        const cierre = claro.indexOf("]");
+        const modo = claro.substring(5, cierre);
+        const textoVoz = claro.substring(cierre + 1);
+        hablarConEfecto(textoVoz, modo);
+      } else if (claro.startsWith("[SFX]")) {
+        reproducirEfectoSoundboard(claro.substring(5));
+      } else {
+        sonarNota(987.77, 110, "sine", 0.12);
+      }
+
+      agregarBurbujaRica("peer", claro, firma, `${rssi} dBm`);
+    }
+
+    function agregarBurbujaRica(quien, claro, hash, infoExtra) {
+      const div = document.createElement("div");
+      div.className = `chat-bubble ${quien}`;
+      const hora = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+      if (claro.startsWith("PX64:")) {
+        const titulo = document.createElement("div");
+        titulo.style.fontWeight = "800";
+        titulo.style.fontSize = "0.78rem";
+        titulo.style.marginBottom = "6px";
+        titulo.textContent = "🎨 Imagen Pixel-Art 16×16 (1 Paquete LoRa):";
+        div.appendChild(titulo);
+        const arr256 = descifrarPixeles16UnPaso(claro);
+        div.appendChild(dibujarArr256EnCanvas(arr256));
+      }
+      else if (claro.startsWith("[TTS:")) {
+        const cierre = claro.indexOf("]");
+        const modo = claro.substring(5, cierre);
+        const textoVoz = claro.substring(cierre + 1);
+        const cfg = PERFILES_VOZ[modo] || PERFILES_VOZ.NORM;
+
+        const header = document.createElement("div");
+        header.className = "voice-badge-header";
+        header.innerHTML = `<span>🔊 Mensaje Hablado (${cfg.nombre})</span>`;
+        const btnPlay = document.createElement("button");
+        btnPlay.type = "button";
+        btnPlay.className = "mini-chip";
+        btnPlay.textContent = "▶️ Escuchar";
+        btnPlay.addEventListener("click", () => hablarConEfecto(textoVoz, modo));
+        header.appendChild(btnPlay);
+
+        const cuerpo = document.createElement("div");
+        cuerpo.style.fontStyle = "italic";
+        cuerpo.textContent = `"${textoVoz}"`;
+
+        div.appendChild(header);
+        div.appendChild(cuerpo);
+      }
+      else if (claro.startsWith("[STK]")) {
+        const st = document.createElement("div");
+        st.className = "sticker-big";
+        st.textContent = claro.substring(5);
+        div.appendChild(st);
+      }
+      else if (claro.startsWith("[SFX]")) {
+        const cod = claro.substring(5);
+        const row = document.createElement("div");
+        row.style.fontWeight = "800";
+        row.innerHTML = `🔊 Efecto de Sonido LoRa: <strong>[${cod}]</strong> `;
+        const btnSfx = document.createElement("button");
+        btnSfx.type = "button";
+        btnSfx.className = "mini-chip";
+        btnSfx.textContent = "🔁 Sonar";
+        btnSfx.addEventListener("click", () => reproducirEfectoSoundboard(cod));
+        row.appendChild(btnSfx);
+        div.appendChild(row);
+      }
+      else {
+        const txt = document.createElement("div");
+        txt.textContent = claro;
+        div.appendChild(txt);
+      }
+
+      const meta = document.createElement("div");
+      meta.className = "bubble-meta";
+      const checkHtml = quien === "me"
+        ? `<span class="ack-check" id="ack-${hash}">✓ Enviado</span>`
+        : `<span class="ack-check verified">✓✓ Verificado</span>`;
+
+      meta.innerHTML = `<span>${hora}</span> • <span>${infoExtra}</span> • <span class="hash-pill">HMAC: ${hash}</span> ${checkHtml}`;
+      div.appendChild(meta);
+      chatHistory.appendChild(div);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    function dibujarArr256EnCanvas(arr256) {
+      const c = document.createElement("canvas");
+      c.width = 160;
+      c.height = 160;
+      c.style.borderRadius = "10px";
+      c.style.border = "2.5px solid #fff";
+      c.style.boxShadow = "0 4px 12px rgba(0,0,0,0.18)";
+      const ctx = c.getContext("2d");
+      for (let i = 0; i < 256; i++) {
+        ctx.fillStyle = PALETA_16[arr256[i] || 0];
+        ctx.fillRect((i % 16) * 10, Math.floor(i / 16) * 10, 10, 10);
+      }
+      return c;
+    }
+
+    function agregarBurbujaSistema(texto) {
+      const div = document.createElement("div");
+      div.className = "chat-bubble system";
+      div.textContent = texto;
+      chatHistory.appendChild(div);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    function agregarAlertaSeguridad(texto) {
+      const div = document.createElement("div");
+      div.className = "chat-bubble security-alert";
+      div.textContent = "🛡️ " + texto;
+      chatHistory.appendChild(div);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    // =========================================================================
+    // PROTOCOLO DE LIENZO BIT A BIT SIN RAYAS NEGRAS ([IMG_INIT] + [IMG_BITS] + [IMG_EOF])
+    // =========================================================================
+    const hiddenFileInput   = document.getElementById("hiddenFileInput");
+    const photoSstvDrawer   = document.getElementById("photoSstvDrawer");
+    const photoQuantPreview = document.getElementById("photoQuantPreview");
+    const pCtx              = photoQuantPreview.getContext("2d");
+    const sstvResSelect     = document.getElementById("sstvResSelect");
+    const sstvBppSelect     = document.getElementById("sstvBppSelect");
+    const sstvAspectSelect  = document.getElementById("sstvAspectSelect");
+    const sstvInfoText      = document.getElementById("sstvInfoText");
+
+    let imagenCargadaObj = null;
+    let modoImportarDirectoA16 = false;
+    let estadoPreviaActual = { w: 48, h: 36, bpp: 4, pixeles: [] };
+
+    const sesionesLienzoBit = {};
+    const almacenPaquetesTx = {};
+
+    function obtenerPxPorPaquete(bpp) {
+      return bpp === 1 ? 384 : (bpp === 4 ? 96 : 48);
+    }
+
+    document.getElementById("btnTogglePhotoSstv").addEventListener("click", () => {
+      document.getElementById("pixelDrawer").classList.remove("open");
+      photoSstvDrawer.classList.toggle("open");
+      if (photoSstvDrawer.classList.contains("open") && !imagenCargadaObj) {
+        generarImagenDemoInicial();
+      }
+    });
+
+    document.getElementById("btnPickImageFile").addEventListener("click", () => {
+      modoImportarDirectoA16 = false;
+      hiddenFileInput.click();
+    });
+
+    document.getElementById("btnImportPhotoTo16").addEventListener("click", () => {
+      modoImportarDirectoA16 = true;
+      hiddenFileInput.click();
+    });
+
+    hiddenFileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          imagenCargadaObj = img;
+          if (modoImportarDirectoA16) {
+            const res16 = descomprimirYCuantizarImagen(img, 16, 16, 4);
+            pixels16 = res16.slice();
+            actualizarVistaGrid16();
+          } else {
+            actualizarPrevisualizacionBitStream();
+          }
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+      hiddenFileInput.value = "";
+    });
+
+    [sstvResSelect, sstvBppSelect, sstvAspectSelect].forEach(el => {
+      el.addEventListener("change", actualizarPrevisualizacionBitStream);
+    });
+
+    function generarImagenDemoInicial() {
+      const tempC = document.createElement("canvas");
+      tempC.width = 80; tempC.height = 60;
+      const tCtx = tempC.getContext("2d");
+      const sky = tCtx.createLinearGradient(0, 0, 0, 40);
+      sky.addColorStop(0, "#0284c7"); sky.addColorStop(1, "#bae6fd");
+      tCtx.fillStyle = sky; tCtx.fillRect(0, 0, 80, 40);
+      tCtx.fillStyle = "#facc15"; tCtx.beginPath(); tCtx.arc(60, 14, 9, 0, Math.PI * 2); tCtx.fill();
+      tCtx.fillStyle = "#16a34a"; tCtx.fillRect(0, 38, 80, 22);
+      tCtx.fillStyle = "#ef4444"; tCtx.beginPath(); tCtx.arc(26, 36, 11, 0, Math.PI * 2); tCtx.fill();
+      const img = new Image();
+      img.onload = () => { imagenCargadaObj = img; actualizarPrevisualizacionBitStream(); };
+      img.src = tempC.toDataURL();
+    }
+
+    function calcularDimensionesLienzo(img, maxSide, modoAspect) {
+      if (modoAspect === "SQ") return [maxSide, maxSide];
+      const ratio = img.width / img.height;
+      let w, h;
+      if (ratio >= 1) {
+        w = maxSide;
+        h = Math.max(8, Math.round(maxSide / ratio));
+      } else {
+        h = maxSide;
+        w = Math.max(8, Math.round(maxSide * ratio));
+      }
+      w = Math.max(8, Math.round(w / 8) * 8);
+      return [w, h];
+    }
+
+    function descomprimirYCuantizarImagen(img, w, h, bpp) {
+      const workC = document.createElement("canvas");
+      workC.width = w;
+      workC.height = h;
+      const wCtx = workC.getContext("2d");
+
+      wCtx.fillStyle = "#ffffff";
+      wCtx.fillRect(0, 0, w, h);
+      wCtx.drawImage(img, 0, 0, w, h);
+
+      const data = wCtx.getImageData(0, 0, w, h).data;
+      const totalPx = w * h;
+      const rBuf = new Float32Array(totalPx);
+      const gBuf = new Float32Array(totalPx);
+      const bBuf = new Float32Array(totalPx);
+
+      for (let i = 0; i < totalPx; i++) {
+        rBuf[i] = data[i * 4];
+        gBuf[i] = data[i * 4 + 1];
+        bBuf[i] = data[i * 4 + 2];
+      }
+
+      const salida = new Array(totalPx).fill(0);
+
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = y * w + x;
+          const oldR = Math.max(0, Math.min(255, rBuf[idx]));
+          const oldG = Math.max(0, Math.min(255, gBuf[idx]));
+          const oldB = Math.max(0, Math.min(255, bBuf[idx]));
+
+          let newR, newG, newB, valorCodificado;
+
+          if (bpp === 1) {
+            const lum = 0.299 * oldR + 0.587 * oldG + 0.114 * oldB;
+            valorCodificado = lum >= 128 ? 1 : 0;
+            newR = newG = newB = valorCodificado ? 255 : 0;
+          } else if (bpp === 4) {
+            valorCodificado = colorMasCercanoPaleta16(oldR, oldG, oldB);
+            [newR, newG, newB] = PALETA_16_RGB[valorCodificado];
+          } else {
+            valorCodificado = rgbA6Bits(oldR, oldG, oldB);
+            [newR, newG, newB] = bits6ARgb(valorCodificado);
+          }
+
+          salida[idx] = valorCodificado;
+
+          const errR = oldR - newR;
+          const errG = oldG - newG;
+          const errB = oldB - newB;
+
+          const difundir = (nx, ny, factor) => {
+            if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+              const nIdx = ny * w + nx;
+              rBuf[nIdx] += errR * factor;
+              gBuf[nIdx] += errG * factor;
+              bBuf[nIdx] += errB * factor;
+            }
+          };
+          difundir(x + 1, y,     7 / 16);
+          difundir(x - 1, y + 1, 3 / 16);
+          difundir(x,     y + 1, 5 / 16);
+          difundir(x + 1, y + 1, 1 / 16);
+        }
+      }
+      return salida;
+    }
+
+    function empaquetarTrozoPixelesAB64(subPixeles, bpp) {
+      let bin = "";
+      if (bpp === 1) {
+        for (let i = 0; i < subPixeles.length; i += 8) {
+          let byte = 0;
+          for (let b = 0; b < 8; b++) {
+            if (subPixeles[i + b]) byte |= (1 << (7 - b));
+          }
+          bin += String.fromCharCode(byte);
+        }
+      } else if (bpp === 4) {
+        for (let i = 0; i < subPixeles.length; i += 2) {
+          const hi = (subPixeles[i] & 0x0F) << 4;
+          const lo = ((subPixeles[i + 1] || 0) & 0x0F);
+          bin += String.fromCharCode(hi | lo);
+        }
+      } else {
+        for (let i = 0; i < subPixeles.length; i++) {
+          bin += String.fromCharCode(subPixeles[i] & 0x3F);
+        }
+      }
+      return btoa(bin);
+    }
+
+    function desempaquetarB64ATrozoPixeles(b64, bpp, cantidadEsperada) {
+      const bin = atob(b64);
+      const out = [];
+      if (bpp === 1) {
+        for (let i = 0; i < bin.length; i++) {
+          const byte = bin.charCodeAt(i);
+          for (let b = 7; b >= 0; b--) {
+            if (out.length < cantidadEsperada) out.push((byte >> b) & 1);
+          }
+        }
+      } else if (bpp === 4) {
+        for (let i = 0; i < bin.length; i++) {
+          const byte = bin.charCodeAt(i);
+          if (out.length < cantidadEsperada) out.push((byte >> 4) & 0x0F);
+          if (out.length < cantidadEsperada) out.push(byte & 0x0F);
+        }
+      } else {
+        for (let i = 0; i < bin.length; i++) {
+          if (out.length < cantidadEsperada) out.push(bin.charCodeAt(i) & 0x3F);
+        }
+      }
+      return out;
+    }
+
+    function actualizarPrevisualizacionBitStream() {
+      if (!imagenCargadaObj) return;
+      const maxSide = parseInt(sstvResSelect.value) || 48;
+      const bpp = parseInt(sstvBppSelect.value) || 4;
+      const modoAspect = sstvAspectSelect.value;
+
+      const [w, h] = calcularDimensionesLienzo(imagenCargadaObj, maxSide, modoAspect);
+      const pixeles = descomprimirYCuantizarImagen(imagenCargadaObj, w, h, bpp);
+
+      estadoPreviaActual = { w, h, bpp, pixeles };
+
+      photoQuantPreview.width = w;
+      photoQuantPreview.height = h;
+      for (let i = 0; i < pixeles.length; i++) {
+        pCtx.fillStyle = valorPixelACss(pixeles[i], bpp);
+        pCtx.fillRect(i % w, Math.floor(i / w), 1, 1);
+      }
+
+      const pxPorPaquete = obtenerPxPorPaquete(bpp);
+      const totalBits = w * h * bpp;
+      const numPaquetesDatos = Math.ceil((w * h) / pxPorPaquete);
+
+      sstvInfoText.textContent =
+        `📐 Petición Lienzo: ${w}×${h} px (${w * h} px) | 🔢 Flujo: ${totalBits.toLocaleString()} bits (${bpp} bpp) | 📦 1 paq [IMG_INIT] + ${numPaquetesDatos} paq [IMG_BITS] (con ACK)`;
+    }
+
+    document.getElementById("btnLoadInto16Editor").addEventListener("click", () => {
+      if (!imagenCargadaObj) return;
+      pixels16 = descomprimirYCuantizarImagen(imagenCargadaObj, 16, 16, 4);
+      actualizarVistaGrid16();
+      photoSstvDrawer.classList.remove("open");
+      document.getElementById("pixelDrawer").classList.add("open");
+    });
+
+    document.getElementById("btnTransmitPhotoLoRa").addEventListener("click", () => {
+      const { w, h, bpp, pixeles } = estadoPreviaActual;
+      if (!pixeles || pixeles.length === 0) return;
+
+      const idStream = Math.floor(100 + Math.random() * 899).toString();
+      const pxPorPaquete = obtenerPxPorPaquete(bpp);
+      const totalBits = w * h * bpp;
+      const totalPkts = Math.ceil(pixeles.length / pxPorPaquete);
+
+      almacenPaquetesTx[idStream] = { w, h, bpp, totalBits, totalPkts, bloques: {} };
+
+      encolarMensajeSeguroLoRa(`[IMG_INIT]${idStream}|${w}|${h}|${bpp}|${totalBits}|${totalPkts}`, 3);
+
+      for (let pkt = 0; pkt < totalPkts; pkt++) {
+        const startPx = pkt * pxPorPaquete;
+        const sub = pixeles.slice(startPx, startPx + pxPorPaquete);
+        const b64 = empaquetarTrozoPixelesAB64(sub, bpp);
+        const tramaBloque = `[IMG_BITS]${idStream}|${pkt}|${startPx}|${sub.length}|${w}|${h}|${bpp}|${totalPkts}|${b64}`;
+        almacenPaquetesTx[idStream].bloques[pkt] = tramaBloque;
+        encolarMensajeSeguroLoRa(tramaBloque, 3);
+      }
+
+      encolarMensajeSeguroLoRa(`[IMG_EOF]${idStream}|${totalPkts}`, 3);
+      photoSstvDrawer.classList.remove("open");
+    });
+
+    function inicializarLienzoRemotoBitABit(quien, datosInit, hash, infoExtra) {
+      const [idStream, wStr, hStr, bppStr, bitsStr, pktsStr] = datosInit.split("|");
+      const w = parseInt(wStr), h = parseInt(hStr), bpp = parseInt(bppStr);
+      const totalBits = parseInt(bitsStr) || (w * h * bpp);
+      const totalPkts = parseInt(pktsStr) || Math.ceil((w * h) / obtenerPxPorPaquete(bpp));
+
+      const clave = `${quien}_${idStream}`;
+      if (sesionesLienzoBit[clave]) return sesionesLienzoBit[clave];
+
+      const div = document.createElement("div");
+      div.className = `chat-bubble ${quien}`;
+
+      const card = document.createElement("div");
+      card.className = "bitstream-card";
+
+      const title = document.createElement("div");
+      title.style.fontWeight = "900";
+      title.style.fontSize = "0.8rem";
+      title.style.color = "#38bdf8";
+      title.textContent = `📐 Lienzo Reservado: ${w}×${h} px (${bpp}-Bit) — Esperando flujo de bits...`;
+
+      const progBar = document.createElement("div");
+      progBar.className = "sstv-progress-bar";
+      const progFill = document.createElement("div");
+      progFill.className = "sstv-progress-fill";
+      progBar.appendChild(progFill);
+
+      const escala = Math.max(3, Math.min(7, Math.floor(240 / Math.max(w, h))));
+      const canvas = document.createElement("canvas");
+      canvas.width = w * escala;
+      canvas.height = h * escala;
+      canvas.style.borderRadius = "8px";
+      canvas.style.border = "2px solid #38bdf8";
+      canvas.style.alignSelf = "center";
+      canvas.style.background = "#020813";
+
+      const ctx = canvas.getContext("2d");
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.14)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < canvas.width; x += escala * 4) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += escala * 4) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+
+      const bitTicker = document.createElement("div");
+      bitTicker.className = "bit-ticker";
+      bitTicker.textContent = `BITS [0 / ${totalBits}]: 0000000000000000...`;
+
+      const meta = document.createElement("div");
+      meta.className = "bubble-meta";
+      const hora = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      meta.innerHTML = `<span>${hora}</span> • <span>${infoExtra}</span> • <span class="hash-pill">HMAC: ${hash}</span>`;
+
+      card.appendChild(title);
+      card.appendChild(progBar);
+      card.appendChild(canvas);
+      card.appendChild(bitTicker);
+      div.appendChild(card);
+      div.appendChild(meta);
+      chatHistory.appendChild(div);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+
+      sonarNota(1046.5, 80, "sine", 0.1);
+
+      sesionesLienzoBit[clave] = {
+        idStream, w, h, bpp, escala, totalBits, totalPkts,
+        canvas, ctx, title, progFill, bitTicker, meta,
+        colaPixelesPorPintar: [],
+        pintandoLoop: false,
+        mapaPixelesPintados: new Uint8Array(w * h),
+        conteoPixelesReales: 0,
+        paquetesRecibidos: new Set(),
+        reintentosNack: 0
+      };
+      return sesionesLienzoBit[clave];
+    }
+
+    function recibirBloqueBitsEnLienzo(quien, datosBits, hash, infoExtra) {
+      const partes = datosBits.split("|");
+      const idStream = partes[0];
+      const pktIdx   = parseInt(partes[1]);
+      const startPx  = parseInt(partes[2]);
+      const countPx  = parseInt(partes[3]);
+
+      let w = 48, h = 36, bpp = 4, totalPkts = 10, b64 = "";
+      if (partes.length >= 9) {
+        w         = parseInt(partes[4]);
+        h         = parseInt(partes[5]);
+        bpp       = parseInt(partes[6]);
+        totalPkts = parseInt(partes[7]);
+        b64       = partes.slice(8).join("|");
+      } else {
+        b64 = partes.slice(4).join("|");
+      }
+
+      const clave = `${quien}_${idStream}`;
+      let sesion = sesionesLienzoBit[clave];
+
+      if (!sesion) {
+        const totalBits = w * h * bpp;
+        sesion = inicializarLienzoRemotoBitABit(
+          quien,
+          `${idStream}|${w}|${h}|${bpp}|${totalBits}|${totalPkts}`,
+          hash,
+          infoExtra
+        );
+      }
+
+      if (sesion.paquetesRecibidos.has(pktIdx)) return;
+      sesion.paquetesRecibidos.add(pktIdx);
+
+      const valores = desempaquetarB64ATrozoPixeles(b64, sesion.bpp, countPx);
+
+      for (let i = 0; i < valores.length; i++) {
+        const pxIndex = startPx + i;
+        if (pxIndex < sesion.w * sesion.h) {
+          sesion.colaPixelesPorPintar.push({
+            pxIndex,
+            val: valores[i]
+          });
+        }
+      }
+
+      const hora = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      sesion.meta.innerHTML = `<span>${hora}</span> • <span>${infoExtra}</span> • <span class="hash-pill">HMAC: ${hash}</span>`;
+
+      if (!sesion.pintandoLoop) {
+        animarLlenadoPixelPorPixel(sesion);
+      }
+    }
+
+    async function animarLlenadoPixelPorPixel(sesion) {
+      sesion.pintandoLoop = true;
+      const { w, h, bpp, escala, ctx } = sesion;
+      const totalPx = w * h;
+
+      while (sesion.colaPixelesPorPintar.length > 0) {
+        const rafaga = Math.max(2, Math.ceil(sesion.colaPixelesPorPintar.length / 14));
+        let bitsString = "";
+
+        for (let k = 0; k < rafaga && sesion.colaPixelesPorPintar.length > 0; k++) {
+          const { pxIndex, val } = sesion.colaPixelesPorPintar.shift();
+          const x = pxIndex % w;
+          const y = Math.floor(pxIndex / w);
+
+          ctx.fillStyle = valorPixelACss(val, bpp);
+          ctx.fillRect(x * escala, y * escala, escala, escala);
+
+          if (sesion.mapaPixelesPintados[pxIndex] === 0) {
+            sesion.mapaPixelesPintados[pxIndex] = 1;
+            sesion.conteoPixelesReales++;
+          }
+          bitsString = val.toString(2).padStart(bpp, "0") + bitsString;
+        }
+
+        if (sesion.colaPixelesPorPintar.length > 0) {
+          const sig = sesion.colaPixelesPorPintar[0].pxIndex;
+          const cx = (sig % w) * escala;
+          const cy = Math.floor(sig / w) * escala;
+          ctx.fillStyle = "#00ff66";
+          ctx.fillRect(cx, cy, escala, escala);
+        }
+
+        const bitsActuales = Math.min(sesion.totalBits, sesion.conteoPixelesReales * bpp);
+        const pct = Math.min(100, Math.round((sesion.conteoPixelesReales / totalPx) * 100));
+        sesion.progFill.style.width = `${pct}%`;
+
+        sesion.bitTicker.textContent =
+          `BITS [${bitsActuales.toLocaleString()} / ${sesion.totalBits.toLocaleString()}]: ${(bitsString + "1011010010110010").slice(0, 28)} █`;
+
+        sesion.title.textContent = sesion.conteoPixelesReales < totalPx
+          ? `📡 Llenando Lienzo ${w}×${h} (${bpp}-Bit) — Píxel ${sesion.conteoPixelesReales}/${totalPx} (${pct}%)`
+          : `✅ Lienzo ${w}×${h} Completado (${sesion.totalBits.toLocaleString()} bits sin rayas)`;
+
+        await new Promise(r => requestAnimationFrame(r));
+      }
+
+      sonarNota(1174.66, 35, "sine", 0.05);
+      sesion.pintandoLoop = false;
+    }
+
+    function verificarIntegridadLienzoRecibido(quien, datosEof) {
+      const [idStream, totalPktsStr] = datosEof.split("|");
+      const clave = `${quien}_${idStream}`;
+      const sesion = sesionesLienzoBit[clave];
+      if (!sesion) return;
+
+      const totalPkts = parseInt(totalPktsStr) || sesion.totalPkts;
+      const faltantes = [];
+      for (let i = 0; i < totalPkts; i++) {
+        if (!sesion.paquetesRecibidos.has(i)) {
+          faltantes.push(i);
+        }
+      }
+
+      if (faltantes.length > 0 && sesion.reintentosNack < 4) {
+        sesion.reintentosNack++;
+        sesion.title.textContent = `🔄 Reparando ${faltantes.length} franja(s) faltante(s)...`;
+        encolarMensajeSeguroLoRa(`[IMG_NACK]${idStream}|${faltantes.slice(0, 12).join(",")}`, 3);
+      }
+    }
+
+    function retransmitirBloquesFaltantesSolicitados(datosNack) {
+      const [idStream, listaStr] = datosNack.split("|");
+      const registro = almacenPaquetesTx[idStream];
+      if (!registro || !listaStr) return;
+
+      const indices = listaStr.split(",").map(n => parseInt(n)).filter(n => !isNaN(n));
+      for (const pktIdx of indices) {
+        if (registro.bloques[pktIdx]) {
+          encolarMensajeSeguroLoRa(registro.bloques[pktIdx], 3);
+        }
+      }
+      encolarMensajeSeguroLoRa(`[IMG_EOF]${idStream}|${registro.totalPkts}`, 3);
+    }
+
+    // =========================================================================
+    // ENVÍO DE CHAT NORMAL, VOZ TTS, STICKERS Y SOUNDBOARD
+    // =========================================================================
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const texto = msgInput.value.trim();
+      if (!texto) return;
+      encolarMensajeSeguroLoRa(texto);
+      msgInput.value = "";
+    });
+
+    document.getElementById("btnSendTTS").addEventListener("click", () => {
+      const texto = msgInput.value.trim();
+      if (!texto) {
+        msgInput.placeholder = "⚠️ Escribe primero lo que quieres que diga con voz...";
+        msgInput.focus();
+        return;
+      }
+      const modo = document.getElementById("voiceEffectSelect").value;
+      hablarConEfecto(texto, modo);
+      encolarMensajeSeguroLoRa(`[TTS:${modo}]${texto}`);
+      msgInput.value = "";
+    });
+
+    document.querySelectorAll(".btn-sticker").forEach(btn => {
+      btn.addEventListener("click", () => encolarMensajeSeguroLoRa("[STK]" + btn.dataset.st));
+    });
+
+    document.querySelectorAll(".btn-sfx").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const sfx = btn.dataset.sfx;
+        reproducirEfectoSoundboard(sfx);
+        encolarMensajeSeguroLoRa("[SFX]" + sfx);
+      });
+    });
+
+    // =========================================================================
+    // ESTUDIO PIXEL-ART 16x16 (256 CUADROS, 16 COLORES, RELLENO Y PLANTILLAS)
+    // =========================================================================
+    let pixels16 = new Array(256).fill(0);
+    let colorPx16Actual = 9;
+    let herramientaPx16 = "PEN";
+    let pintandoPx16 = false;
+
+    const pixelGrid16 = document.getElementById("pixelGrid16");
+    const palette16Container = document.getElementById("palette16Container");
+
+    PALETA_16.forEach((hex, idx) => {
+      const sw = document.createElement("div");
+      sw.className = "pal16-swatch" + (idx === colorPx16Actual ? " active" : "");
+      sw.style.background = hex;
+      sw.addEventListener("click", () => {
+        colorPx16Actual = idx;
+        if (herramientaPx16 === "ERASE") seleccionarHerramientaPx16("PEN");
+        document.querySelectorAll(".pal16-swatch").forEach(s => s.classList.remove("active"));
+        sw.classList.add("active");
+      });
+      palette16Container.appendChild(sw);
+    });
+
+    function actualizarVistaGrid16() {
+      const celdas = pixelGrid16.children;
+      for (let i = 0; i < 256; i++) {
+        celdas[i].style.background = PALETA_16[pixels16[i]];
+      }
+    }
+
+    function floodFill16(indiceInicial, colorObjetivo, colorNuevo) {
+      if (colorObjetivo === colorNuevo) return;
+      const cola = [indiceInicial];
+      const visitado = new Set();
+      while (cola.length > 0) {
+        const idx = cola.pop();
+        if (visitado.has(idx) || pixels16[idx] !== colorObjetivo) continue;
+        visitado.add(idx);
+        pixels16[idx] = colorNuevo;
+        const r = Math.floor(idx / 16), c = idx % 16;
+        if (r > 0)  cola.push((r - 1) * 16 + c);
+        if (r < 15) cola.push((r + 1) * 16 + c);
+        if (c > 0)  cola.push(r * 16 + (c - 1));
+        if (c < 15) cola.push(r * 16 + (c + 1));
+      }
+      actualizarVistaGrid16();
+    }
+
+    function tocarCeldaPx16(idx) {
+      if (herramientaPx16 === "BUCKET") {
+        floodFill16(idx, pixels16[idx], colorPx16Actual);
+      } else {
+        const col = herramientaPx16 === "ERASE" ? 0 : colorPx16Actual;
+        pixels16[idx] = col;
+        pixelGrid16.children[idx].style.background = PALETA_16[col];
+      }
+    }
+
+    for (let i = 0; i < 256; i++) {
+      const cell = document.createElement("div");
+      cell.className = "px16-cell";
+      cell.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        pintandoPx16 = true;
+        tocarCeldaPx16(i);
+      });
+      cell.addEventListener("pointerenter", () => {
+        if (pintandoPx16 && herramientaPx16 !== "BUCKET") tocarCeldaPx16(i);
+      });
+      pixelGrid16.appendChild(cell);
+    }
+    window.addEventListener("pointerup", () => pintandoPx16 = false);
+
+    function seleccionarHerramientaPx16(tool) {
+      herramientaPx16 = tool;
+      document.getElementById("pxToolPen").classList.toggle("active", tool === "PEN");
+      document.getElementById("pxToolBucket").classList.toggle("active", tool === "BUCKET");
+      document.getElementById("pxToolEraser").classList.toggle("active", tool === "ERASE");
+    }
+
+    document.getElementById("pxToolPen").addEventListener("click", () => seleccionarHerramientaPx16("PEN"));
+    document.getElementById("pxToolBucket").addEventListener("click", () => seleccionarHerramientaPx16("BUCKET"));
+    document.getElementById("pxToolEraser").addEventListener("click", () => seleccionarHerramientaPx16("ERASE"));
+
+    function cargarPlantilla16(nombre) {
+      pixels16.fill(0);
+      const pintar = (coords, col) => coords.forEach(([r, c]) => { if (r>=0&&r<16&&c>=0&&c<16) pixels16[r*16+c] = col; });
+      if (nombre === "heart") {
+        const mapa = [
+          "0003330000333000",
+          "0033333003333300",
+          "0331133333333330",
+          "0311333333333330",
+          "0333333333333330",
+          "0333333333333330",
+          "0033333333333300",
+          "0003333333333000",
+          "0000333333330000",
+          "0000033333300000",
+          "0000003333000000",
+          "0000000330000000"
+        ];
+        mapa.forEach((fila, r) => [...fila].forEach((ch, c) => {
+          if (ch === "3") pixels16[(r+2)*16+c] = 3;
+          if (ch === "1") pixels16[(r+2)*16+c] = 0;
+        }));
+      } else if (nombre === "alien") {
+        const mapa = [
+          "0007000000007000",
+          "0000700000070000",
+          "0007777777777000",
+          "0077711771177700",
+          "0777711771177770",
+          "0777777777777770",
+          "0707777777777070",
+          "0707000000007070",
+          "0000770000770000"
+        ];
+        mapa.forEach((fila, r) => [...fila].forEach((ch, c) => {
+          if (ch === "7") pixels16[(r+3)*16+c] = 6;
+          if (ch === "1") pixels16[(r+3)*16+c] = 1;
+        }));
+      } else if (nombre === "cat") {
+        pintar([[3,3],[3,12],[4,3],[4,4],[4,11],[4,12]], 4);
+        for (let r=5; r<=12; r++) for (let c=3; c<=12; c++) pixels16[r*16+c] = 4;
+        pintar([[7,5],[7,10],[8,5],[8,10]], 1);
+        pintar([[9,7],[9,8]], 13);
+        pintar([[8,1],[8,2],[10,1],[10,2],[8,13],[8,14],[10,13],[10,14]], 1);
+      } else if (nombre === "shroom") {
+        for (let r=3; r<=8; r++) for (let c=3; c<=12; c++) pixels16[r*16+c] = 3;
+        pintar([[4,5],[4,6],[5,5],[5,6],[4,10],[4,11],[7,8],[7,9]], 0);
+        for (let r=9; r<=13; r++) for (let c=5; c<=10; c++) pixels16[r*16+c] = 15;
+        pintar([[10,6],[11,6],[10,9],[11,9]], 1);
+      } else if (nombre === "smile") {
+        for (let r=2; r<=13; r++) for (let c=2; c<=13; c++) pixels16[r*16+c] = 5;
+        for (let c=2; c<=13; c++) pixels16[5*16+c] = 1;
+        pintar([[5,4],[5,5],[5,6],[6,4],[6,5],[6,6],[5,9],[5,10],[5,11],[6,9],[6,10],[6,11]], 1);
+        pintar([[10,5],[11,6],[11,7],[11,8],[11,9],[10,10]], 1);
+      }
+      actualizarVistaGrid16();
+    }
+
+    document.querySelectorAll("[data-tpl]").forEach(btn => {
+      btn.addEventListener("click", () => cargarPlantilla16(btn.dataset.tpl));
+    });
+
+    document.getElementById("btnTogglePixel").addEventListener("click", () => {
+      photoSstvDrawer.classList.remove("open");
+      document.getElementById("pixelDrawer").classList.toggle("open");
+    });
+
+    document.getElementById("btnClearPixel16").addEventListener("click", () => {
+      pixels16.fill(0);
+      actualizarVistaGrid16();
+    });
+
+    document.getElementById("btnSendPixel16").addEventListener("click", () => {
+      const tramaPX64 = cifrarPixeles16UnPaso(pixels16);
+      encolarTramaCrudaMsg(tramaPX64);
+      document.getElementById("pixelDrawer").classList.remove("open");
+    });
+
+    // =========================================================================
+    // PIZARRA DE COORDENADAS PRO
+    // =========================================================================
+    const COLORES_PIZARRA = ["#0284c7", "#ef4444", "#22c55e", "#f59e0b", "#a855f7", "#ec4899", "#00f5d4", "#0f172a"];
+    const coordCanvas     = document.getElementById("coordCanvas");
+    const cCtx            = coordCanvas.getContext("2d");
+    const localCoordTxt   = document.getElementById("localCoordTxt");
+    const remoteCoordTxt  = document.getElementById("remoteCoordTxt");
+    const remotePenCursor = document.getElementById("remotePenCursor");
+    const drawSizeSelect  = document.getElementById("drawSizeSelect");
+
+    let drawToolActual = "PEN";
+    let colorDibujoIdx = 0;
+    let dibujandoActivo = false;
+    let puntoInicioForma = null;
+    let puntosTrazoLibre = [];
+
+    cCtx.lineCap = "round";
+    cCtx.lineJoin = "round";
+
+    document.querySelectorAll("#drawToolsGroup .tool-chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        drawToolActual = btn.dataset.dtool;
+        document.querySelectorAll("#drawToolsGroup .tool-chip").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+
+    document.querySelectorAll("#drawColorOrbs .color-orb").forEach(orb => {
+      orb.addEventListener("click", () => {
+        colorDibujoIdx = parseInt(orb.dataset.idx);
+        document.querySelectorAll("#drawColorOrbs .color-orb").forEach(o => o.classList.remove("selected"));
+        orb.classList.add("selected");
+      });
+    });
+
+    document.getElementById("btnToggleDarkCanvas").addEventListener("click", () => {
+      document.getElementById("canvasStage").classList.toggle("dark-mode");
+    });
+
+    function obtenerCoord255(evt) {
+      const rect = coordCanvas.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      const x = Math.round(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * 255);
+      const y = Math.round(Math.max(0, Math.min(1, (clientY - rect.top) / rect.height)) * 255);
+      return [x, y];
+    }
+
+    function aPxCanvas(x255, y255) {
+      return [(x255 / 255) * coordCanvas.width, (y255 / 255) * coordCanvas.height];
+    }
+
+    function dibujarPrimitivaEnCanvas(tipo, colIdx, grosor, coords) {
+      cCtx.save();
+      if (tipo === "ERASE") {
+        cCtx.globalCompositeOperation = "destination-out";
+        cCtx.lineWidth = grosor * 2.5;
+      } else {
+        cCtx.globalCompositeOperation = "source-over";
+        cCtx.strokeStyle = COLORES_PIZARRA[colIdx] || "#0284c7";
+        cCtx.fillStyle = COLORES_PIZARRA[colIdx] || "#0284c7";
+        cCtx.lineWidth = grosor;
+      }
+
+      if (tipo === "PEN" || tipo === "ERASE" || tipo === "LINE") {
+        if (coords.length > 0) {
+          cCtx.beginPath();
+          const [x0, y0] = aPxCanvas(coords[0][0], coords[0][1]);
+          cCtx.moveTo(x0, y0);
+          for (let i = 1; i < coords.length; i++) {
+            const [xi, yi] = aPxCanvas(coords[i][0], coords[i][1]);
+            cCtx.lineTo(xi, yi);
+          }
+          if (coords.length === 1) cCtx.lineTo(x0 + 0.5, y0 + 0.5);
+          cCtx.stroke();
+        }
+      } else if (tipo === "RECT" && coords.length >= 2) {
+        const [x1, y1] = aPxCanvas(coords[0][0], coords[0][1]);
+        const [x2, y2] = aPxCanvas(coords[1][0], coords[1][1]);
+        cCtx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+      } else if (tipo === "CIRC" && coords.length >= 2) {
+        const [x1, y1] = aPxCanvas(coords[0][0], coords[0][1]);
+        const [x2, y2] = aPxCanvas(coords[1][0], coords[1][1]);
+        const r = Math.hypot(x2 - x1, y2 - y1);
+        cCtx.beginPath();
+        cCtx.arc(x1, y1, r, 0, Math.PI * 2);
+        cCtx.stroke();
+      } else if (tipo.startsWith("STAMP_") && coords.length >= 1) {
+        const [x, y] = aPxCanvas(coords[0][0], coords[0][1]);
+        cCtx.font = `${grosor * 4 + 14}px sans-serif`;
+        cCtx.textAlign = "center";
+        cCtx.textBaseline = "middle";
+        cCtx.fillText(tipo === "STAMP_STAR" ? "⭐" : "❤️", x, y);
+      }
+      cCtx.restore();
+    }
+
+    function enviarComandoVectorDibujo(tipo, colIdx, grosor, coords) {
+      let hex = "";
+      for (let [x, y] of coords) {
+        hex += x.toString(16).padStart(2, "0").toUpperCase() + y.toString(16).padStart(2, "0").toUpperCase();
+      }
+      encolarMensajeSeguroLoRa(`[DRAW]${tipo}:${colIdx},${grosor}:${hex}`);
+    }
+
+    coordCanvas.addEventListener("pointerdown", (e) => {
+      if (!writer) return;
+      const [x, y] = obtenerCoord255(e);
+      const grosor = parseInt(drawSizeSelect.value) || 6;
+
+      if (drawToolActual.startsWith("STAMP_")) {
+        dibujarPrimitivaEnCanvas(drawToolActual, colorDibujoIdx, grosor, [[x, y]]);
+        enviarComandoVectorDibujo(drawToolActual, colorDibujoIdx, grosor, [[x, y]]);
+        return;
+      }
+
+      dibujandoActivo = true;
+      puntoInicioForma = [x, y];
+      puntosTrazoLibre = [[x, y]];
+      if (drawToolActual === "PEN" || drawToolActual === "ERASE") {
+        dibujarPrimitivaEnCanvas(drawToolActual, colorDibujoIdx, grosor, [[x, y]]);
+      }
+    });
+
+    coordCanvas.addEventListener("pointermove", (e) => {
+      const [x, y] = obtenerCoord255(e);
+      localCoordTxt.textContent = `X: ${x}, Y: ${y}`;
+      if (!dibujandoActivo) return;
+
+      if (drawToolActual === "PEN" || drawToolActual === "ERASE") {
+        const prev = puntosTrazoLibre[puntosTrazoLibre.length - 1];
+        if (Math.hypot(x - prev[0], y - prev[1]) >= 6) {
+          const grosor = parseInt(drawSizeSelect.value) || 6;
+          dibujarPrimitivaEnCanvas(drawToolActual, colorDibujoIdx, grosor, [prev, [x, y]]);
+          puntosTrazoLibre.push([x, y]);
+          if (puntosTrazoLibre.length >= 14) {
+            enviarComandoVectorDibujo(drawToolActual, colorDibujoIdx, grosor, puntosTrazoLibre);
+            puntosTrazoLibre = [[x, y]];
+          }
+        }
+      }
+    });
+
+    window.addEventListener("pointerup", (e) => {
+      if (!dibujandoActivo) return;
+      dibujandoActivo = false;
+      const grosor = parseInt(drawSizeSelect.value) || 6;
+
+      if (drawToolActual === "PEN" || drawToolActual === "ERASE") {
+        if (puntosTrazoLibre.length > 0) {
+          enviarComandoVectorDibujo(drawToolActual, colorDibujoIdx, grosor, puntosTrazoLibre);
+          puntosTrazoLibre = [];
+        }
+      } else if (puntoInicioForma) {
+        const [x2, y2] = obtenerCoord255(e);
+        const pts = [puntoInicioForma, [x2, y2]];
+        dibujarPrimitivaEnCanvas(drawToolActual, colorDibujoIdx, grosor, pts);
+        enviarComandoVectorDibujo(drawToolActual, colorDibujoIdx, grosor, pts);
+        puntoInicioForma = null;
+      }
+    });
+
+    document.getElementById("btnClearCoordCanvas").addEventListener("click", () => {
+      cCtx.clearRect(0, 0, coordCanvas.width, coordCanvas.height);
+      encolarMensajeSeguroLoRa("[DRAW]CLEAR");
+    });
+
+    async function procesarComandoRemotoDibujo(cmd) {
+      if (cmd === "CLEAR") {
+        cCtx.clearRect(0, 0, coordCanvas.width, coordCanvas.height);
+        return;
+      }
+      const p1 = cmd.indexOf(":");
+      const p2 = cmd.indexOf(":", p1 + 1);
+      if (p1 === -1 || p2 === -1) return;
+
+      const tipo = cmd.substring(0, p1);
+      const [colIdx, grosor] = cmd.substring(p1 + 1, p2).split(",").map(Number);
+      const hex = cmd.substring(p2 + 1);
+      const coords = [];
+      for (let i = 0; i + 3 < hex.length; i += 4) {
+        coords.push([parseInt(hex.substr(i, 2), 16), parseInt(hex.substr(i + 2, 2), 16)]);
+      }
+
+      if (coords.length === 0) return;
+      remotePenCursor.style.opacity = "1";
+
+      if (tipo === "PEN" || tipo === "ERASE") {
+        for (let i = 0; i < coords.length; i++) {
+          const seg = i === 0 ? [coords[0]] : [coords[i - 1], coords[i]];
+          dibujarPrimitivaEnCanvas(tipo, colIdx, grosor, seg);
+          moverCursorRemotoUI(coords[i][0], coords[i][1]);
+          await new Promise(r => setTimeout(r, 25));
+        }
+      } else {
+        dibujarPrimitivaEnCanvas(tipo, colIdx, grosor, coords);
+        const ult = coords[coords.length - 1];
+        moverCursorRemotoUI(ult[0], ult[1]);
+      }
+
+      setTimeout(() => remotePenCursor.style.opacity = "0", 1100);
+    }
+
+    function moverCursorRemotoUI(x255, y255) {
+      remoteCoordTxt.textContent = `X: ${x255}, Y: ${y255}`;
+      const rect = coordCanvas.getBoundingClientRect();
+      remotePenCursor.style.left = `${(x255 / 255) * rect.width}px`;
+      remotePenCursor.style.top  = `${(y255 / 255) * rect.height}px`;
+      remotePenCursor.textContent = `✏️ ${destNodoId} (${x255}, ${y255})`;
+    }
+
+    // =========================================================================
+    // AJEDREZ P2P CON BLOQUEO ESTRICTO DE COLOR POR PLACA
+    // =========================================================================
+    const ICONOS_PIEZAS = {
+      P: "♙", R: "♖", N: "♘", B: "♗", Q: "♕", K: "♔",
+      p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚"
+    };
+
+    let tableroAjedrez = [];
+    let turnoBlancas = true;
+    let nodoBlancas = "NODO_A";
+    let casillaSeleccionada = null;
+    let movimientosValidosActuales = [];
+    let ultimoMovAjedrez = null;
+
+    function soyBlancasEnAjedrez() {
+      if (miNodoId === "CENTRAL") {
+        return destNodoId === "NODO_B" ? (nodoBlancas === "NODO_A") : (nodoBlancas === "NODO_B");
+      }
+      return miNodoId === nodoBlancas;
+    }
+
+    function iniciarTableroAjedrez(quienEsBlancas = "NODO_A") {
+      nodoBlancas = quienEsBlancas;
+      tableroAjedrez = [
+        ["r","n","b","q","k","b","n","r"],
+        ["p","p","p","p","p","p","p","p"],
+        ["","","","","","","",""],
+        ["","","","","","","",""],
+        ["","","","","","","",""],
+        ["","","","","","","",""],
+        ["P","P","P","P","P","P","P","P"],
+        ["R","N","B","Q","K","B","N","R"]
+      ];
+      turnoBlancas = true;
+      casillaSeleccionada = null;
+      movimientosValidosActuales = [];
+      ultimoMovAjedrez = null;
+      document.getElementById("chessMoveLog").innerHTML = "Nueva partida iniciada.";
+      actualizarBannersAjedrez();
+      renderizarAjedrez();
+    }
+
+    function actualizarBannersAjedrez() {
+      const soyW = soyBlancasEnAjedrez();
+      document.getElementById("chessMyColorBadge").textContent =
+        `♟️ Tu Color (${miNodoId}): ${soyW ? "♔ BLANCAS" : "♚ NEGRAS"}`;
+
+      const esMiTurno = (turnoBlancas && soyW) || (!turnoBlancas && !soyW);
+      const banner = document.getElementById("chessTurnBanner");
+      banner.textContent = turnoBlancas
+        ? `Turno: ♔ Blancas (${esMiTurno ? "¡TU TURNO!" : "Esperando al rival..."})`
+        : `Turno: ♚ Negras (${esMiTurno ? "¡TU TURNO!" : "Esperando al rival..."})`;
+      banner.style.background = esMiTurno ? "#bbf7d0" : "#e0f2fe";
+    }
+
+    function esBlanca(p) { return p && p === p.toUpperCase(); }
+
+    function obtenerMovimientosLegales(f, c) {
+      const p = tableroAjedrez[f][c];
+      if (!p) return [];
+      const blanca = esBlanca(p);
+      const tipo = p.toLowerCase();
+      const movs = [];
+      const dentro = (r, col) => r >= 0 && r < 8 && col >= 0 && col < 8;
+      const aliado = (r, col) => tableroAjedrez[r][col] && (esBlanca(tableroAjedrez[r][col]) === blanca);
+      const enemigo = (r, col) => tableroAjedrez[r][col] && (esBlanca(tableroAjedrez[r][col]) !== blanca);
+
+      if (tipo === "p") {
+        const dir = blanca ? -1 : 1;
+        const filaIni = blanca ? 6 : 1;
+        if (dentro(f + dir, c) && !tableroAjedrez[f + dir][c]) {
+          movs.push([f + dir, c]);
+          if (f === filaIni && !tableroAjedrez[f + 2 * dir][c]) movs.push([f + 2 * dir, c]);
+        }
+        [-1, 1].forEach(dc => {
+          if (dentro(f + dir, c + dc) && enemigo(f + dir, c + dc)) movs.push([f + dir, c + dc]);
+        });
+      } else if (tipo === "n") {
+        [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr, dc]) => {
+          if (dentro(f + dr, c + dc) && !aliado(f + dr, c + dc)) movs.push([f + dr, c + dc]);
+        });
+      } else if (tipo === "k") {
+        [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr, dc]) => {
+          if (dentro(f + dr, c + dc) && !aliado(f + dr, c + dc)) movs.push([f + dr, c + dc]);
+        });
+      } else {
+        const dirs = [];
+        if (tipo === "r" || tipo === "q") dirs.push([-1,0],[1,0],[0,-1],[0,1]);
+        if (tipo === "b" || tipo === "q") dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
+        dirs.forEach(([dr, dc]) => {
+          let nr = f + dr, nc = c + dc;
+          while (dentro(nr, nc)) {
+            if (aliado(nr, nc)) break;
+            movs.push([nr, nc]);
+            if (enemigo(nr, nc)) break;
+            nr += dr; nc += dc;
+          }
+        });
+      }
+      return movs;
+    }
+
+    function aplicarMovimientoAjedrez(f1, c1, f2, c2, emitirPorLoRa) {
+      const pieza = tableroAjedrez[f1][c1];
+      const capturada = tableroAjedrez[f2][c2];
+      tableroAjedrez[f2][c2] = pieza;
+      tableroAjedrez[f1][c1] = "";
+
+      if (pieza === "P" && f2 === 0) tableroAjedrez[f2][c2] = "Q";
+      if (pieza === "p" && f2 === 7) tableroAjedrez[f2][c2] = "q";
+
+      ultimoMovAjedrez = { f1, c1, f2, c2 };
+      turnoBlancas = !turnoBlancas;
+      casillaSeleccionada = null;
+      movimientosValidosActuales = [];
+
+      const cols = "abcdefgh";
+      const log = document.getElementById("chessMoveLog");
+      const item = document.createElement("div");
+      item.textContent = `${ICONOS_PIEZAS[pieza]} ${cols[c1]}${8 - f1} ➔ ${cols[c2]}${8 - f2}`;
+      log.appendChild(item);
+      log.scrollTop = log.scrollHeight;
+
+      sonarNota(660, 85, "triangle", 0.14);
+      actualizarBannersAjedrez();
+      renderizarAjedrez();
+
+      if (capturada && capturada.toLowerCase() === "k") {
+        document.getElementById("chessTurnBanner").textContent =
+          `🏆 ¡JAQUE MATE! Ganaron las ${esBlanca(pieza) ? "Blancas" : "Negras"}`;
+      }
+
+      if (emitirPorLoRa) encolarMensajeSeguroLoRa(`[CHESS]M:${f1},${c1},${f2},${c2}`);
+    }
+
+    function renderizarAjedrez() {
+      const boardEl = document.getElementById("chessBoard");
+      boardEl.innerHTML = "";
+      const soyW = soyBlancasEnAjedrez();
+      const girar = !soyW;
+
+      for (let idx = 0; idx < 64; idx++) {
+        const f = girar ? 7 - Math.floor(idx / 8) : Math.floor(idx / 8);
+        const c = girar ? 7 - (idx % 8) : (idx % 8);
+
+        const sq = document.createElement("div");
+        sq.className = `chess-sq ${(f + c) % 2 === 0 ? "light" : "dark"}`;
+
+        if (casillaSeleccionada && casillaSeleccionada[0] === f && casillaSeleccionada[1] === c) sq.classList.add("selected");
+        if (movimientosValidosActuales.some(([mr, mc]) => mr === f && mc === c)) sq.classList.add("valid-move");
+        if (ultimoMovAjedrez &&
+           ((ultimoMovAjedrez.f1 === f && ultimoMovAjedrez.c1 === c) ||
+            (ultimoMovAjedrez.f2 === f && ultimoMovAjedrez.c2 === c))) sq.classList.add("last-move");
+
+        const p = tableroAjedrez[f][c];
+        if (p) {
+          const span = document.createElement("span");
+          span.className = esBlanca(p) ? "piece-w" : "piece-b";
+          span.textContent = ICONOS_PIEZAS[p];
+          sq.appendChild(span);
+        }
+
+        sq.addEventListener("click", () => {
+          const esMiTurno = (turnoBlancas && soyW) || (!turnoBlancas && !soyW);
+          if (!esMiTurno) return;
+
+          if (casillaSeleccionada && movimientosValidosActuales.some(([mr, mc]) => mr === f && mc === c)) {
+            aplicarMovimientoAjedrez(casillaSeleccionada[0], casillaSeleccionada[1], f, c, true);
+            return;
+          }
+
+          if (p && (esBlanca(p) === soyW)) {
+            casillaSeleccionada = [f, c];
+            movimientosValidosActuales = obtenerMovimientosLegales(f, c);
+            renderizarAjedrez();
+          } else {
+            casillaSeleccionada = null;
+            movimientosValidosActuales = [];
+            renderizarAjedrez();
+          }
+        });
+
+        boardEl.appendChild(sq);
+      }
+    }
+
+    function procesarComandoRemotoAjedrez(cmd) {
+      if (cmd.startsWith("NEW:")) {
+        iniciarTableroAjedrez(cmd.substring(4));
+      } else if (cmd.startsWith("M:")) {
+        const [f1, c1, f2, c2] = cmd.substring(2).split(",").map(Number);
+        aplicarMovimientoAjedrez(f1, c1, f2, c2, false);
+      }
+    }
+
+    document.getElementById("btnNewChessNormal").addEventListener("click", () => {
+      iniciarTableroAjedrez("NODO_A");
+      encolarMensajeSeguroLoRa("[CHESS]NEW:NODO_A");
+    });
+
+    document.getElementById("btnNewChessSwap").addEventListener("click", () => {
+      const nuevoW = nodoBlancas === "NODO_A" ? "NODO_B" : "NODO_A";
+      iniciarTableroAjedrez(nuevoW);
+      encolarMensajeSeguroLoRa("[CHESS]NEW:" + nuevoW);
+    });
+
+    // =========================================================================
+    // JUEGO DE GATO P2P CON BLOQUEO ESTRICTO DE FICHA Y TURNO
+    // =========================================================================
+    let celdasGato = new Array(9).fill("");
+    let turnoGato = "X";
+    let juegoGatoActivo = true;
+    let puntosX = 0, puntosO = 0;
+    let lineaGanadoraGato = [];
+
+    const LINEAS_VICTORIA = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    function miFichaGato() {
+      if (miNodoId === "CENTRAL") {
+        return destNodoId === "NODO_B" ? "X" : "O";
+      }
+      return miNodoId === "NODO_A" ? "X" : "O";
+    }
+
+    function actualizarTextosGato() {
+      const miF = miFichaGato();
+      document.getElementById("gatoMyRoleTxt").textContent =
+        `Tu ficha asignada (${miNodoId}): ${miF === "X" ? "❌" : "⭕"}`;
+
+      if (!juegoGatoActivo) return;
+      const esMiTurno = (turnoGato === miF);
+      document.getElementById("gatoStatus").textContent =
+        `Turno de ${turnoGato === "X" ? "❌ (NODO_A)" : "⭕ (NODO_B)"} — ${esMiTurno ? "¡TU TURNO!" : "Esperando jugada..."}`;
+    }
+
+    function renderizarGato() {
+      const grid = document.getElementById("gatoGrid");
+      grid.innerHTML = "";
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement("div");
+        cell.className = "gato-cell";
+        if (lineaGanadoraGato.includes(i)) cell.classList.add("win");
+        cell.textContent = celdasGato[i] === "X" ? "❌" : (celdasGato[i] === "O" ? "⭕" : "");
+
+        cell.addEventListener("click", () => {
+          if (!juegoGatoActivo || celdasGato[i] !== "" || turnoGato !== miFichaGato()) return;
+          aplicarJugadaGato(i, turnoGato, true);
+        });
+        grid.appendChild(cell);
+      }
+    }
+
+    function aplicarJugadaGato(idx, ficha, emitirPorLoRa) {
+      if (celdasGato[idx] !== "" || !juegoGatoActivo) return;
+      celdasGato[idx] = ficha;
+      sonarNota(ficha === "X" ? 740 : 587, 90, "sine", 0.14);
+
+      for (let l of LINEAS_VICTORIA) {
+        const [a, b, c] = l;
+        if (celdasGato[a] && celdasGato[a] === celdasGato[b] && celdasGato[a] === celdasGato[c]) {
+          juegoGatoActivo = false;
+          lineaGanadoraGato = l;
+          if (ficha === "X") puntosX++; else puntosO++;
+          document.getElementById("gatoStatus").textContent =
+            `🏆 ¡Ganó ${ficha === "X" ? "❌ (NODO_A)" : "⭕ (NODO_B)"}!`;
+          document.getElementById("gatoScore").textContent =
+            `Marcador — ❌ NODO_A: ${puntosX} | ⭕ NODO_B: ${puntosO}`;
+          renderizarGato();
+          if (emitirPorLoRa) encolarMensajeSeguroLoRa(`[GATO]M:${idx},${ficha}`);
+          return;
+        }
+      }
+
+      if (!celdasGato.includes("")) {
+        juegoGatoActivo = false;
+        document.getElementById("gatoStatus").textContent = "🤝 ¡Empate!";
+      } else {
+        turnoGato = ficha === "X" ? "O" : "X";
+        actualizarTextosGato();
+      }
+
+      renderizarGato();
+      if (emitirPorLoRa) encolarMensajeSeguroLoRa(`[GATO]M:${idx},${ficha}`);
+    }
+
+    function reiniciarGato(fichaInicial = "X") {
+      celdasGato.fill("");
+      turnoGato = fichaInicial;
+      juegoGatoActivo = true;
+      lineaGanadoraGato = [];
+      actualizarTextosGato();
+      renderizarGato();
+    }
+
+    function procesarComandoRemotoGato(cmd) {
+      if (cmd.startsWith("RESET:")) {
+        reiniciarGato(cmd.substring(6));
+      } else if (cmd.startsWith("M:")) {
+        const [idxStr, ficha] = cmd.substring(2).split(",");
+        aplicarJugadaGato(parseInt(idxStr), ficha, false);
+      }
+    }
+
+    document.getElementById("btnResetGato").addEventListener("click", () => {
+      const siguienteInicia = (puntosX + puntosO) % 2 === 0 ? "X" : "O";
+      reiniciarGato(siguienteInicia);
+      encolarMensajeSeguroLoRa("[GATO]RESET:" + siguienteInicia);
+    });
+
+    function configurarIdentidadEnJuegos() {
+      iniciarTableroAjedrez("NODO_A");
+      reiniciarGato("X");
+    }
+    configurarIdentidadEnJuegos();
+
+    // =========================================================================
+    // CONTROLES DE HARDWARE, LLAMADAS, PING Y MODO HACKER
+    // =========================================================================
+    function encenderFocoPing() {
+      const f = document.getElementById("pingFoco");
+      f.classList.add("lit");
+      sonarNota(1318.5, 75, "sine", 0.08);
+      setTimeout(() => f.classList.remove("lit"), 700);
+    }
+
+    function dispararPingSeguro() {
+      if (isProcessingQueue || (Date.now() - lastTxTimestamp < 1500)) return;
+      lastPingSentTime = Date.now();
+      enviarComandoDirecto("CMD_PING:" + lastPingSentTime);
+    }
+
+    document.getElementById("btnPingOnce").addEventListener("click", () => {
+      lastPingSentTime = Date.now();
+      enviarComandoDirecto("CMD_PING:" + lastPingSentTime);
+    });
+
+    document.getElementById("chkAutoPing").addEventListener("change", (e) => {
+      if (e.target.checked) {
+        const seg = Math.max(2, parseInt(document.getElementById("numPingSec").value) || 4);
+        dispararPingSeguro();
+        autoPingTimer = setInterval(dispararPingSeguro, seg * 1000);
+      } else {
+        clearInterval(autoPingTimer);
+        autoPingTimer = null;
+      }
+    });
+
+    document.getElementById("btnNudge").addEventListener("click", () => {
+      ejecutarEfectoZumbidoMSN();
+      enviarComandoDirecto("CMD_NUDGE");
+    });
+
+    document.getElementById("btnLedOn").addEventListener("click", () => enviarComandoDirecto("CMD_LED:ON"));
+    document.getElementById("btnLedOff").addEventListener("click", () => enviarComandoDirecto("CMD_LED:OFF"));
+    document.getElementById("btnLedSos").addEventListener("click", () => enviarComandoDirecto("CMD_LED:SOS"));
+
+    document.getElementById("btnAtkHash").addEventListener("click", () => enviarComandoDirecto("CMD_ATK:FAKE_HASH"));
+    document.getElementById("btnAtkReplay").addEventListener("click", () => enviarComandoDirecto("CMD_ATK:REPLAY"));
+    document.getElementById("btnAtkSpoof").addEventListener("click", () => enviarComandoDirecto("CMD_ATK:SPOOF"));
+
+    const callBox = document.getElementById("callBox");
+    const callStateText = document.getElementById("callStateText");
+    const callSubText = document.getElementById("callSubText");
+    const btnCall = document.getElementById("btnCall");
+    const btnAnswer = document.getElementById("btnAnswer");
+    const btnHangup = document.getElementById("btnHangup");
+
+    function iniciarTimbre() {
+      detenerTimbre();
+      const melodia = () => {
+        sonarNota(587.33, 170, "sine", 0.16);
+        setTimeout(() => sonarNota(880, 170, "sine", 0.16), 180);
+        setTimeout(() => sonarNota(1174.66, 300, "triangle", 0.15), 360);
+      };
+      melodia();
+      ringInterval = setInterval(melodia, 1400);
+    }
+
+    function detenerTimbre() {
+      if (ringInterval) { clearInterval(ringInterval); ringInterval = null; }
+    }
+
+    btnCall.addEventListener("click", () => {
+      callBox.className = "call-status-box ringing";
+      callStateText.textContent = "Llamando...";
+      btnCall.disabled = true;
+      btnHangup.disabled = false;
+      iniciarTimbre();
+      enviarComandoDirecto("CMD_CALL:REQ");
+    });
+
+    btnAnswer.addEventListener("click", () => {
+      enviarComandoDirecto("CMD_CALL:ACC");
+      iniciarLlamadaActiva();
+    });
+
+    btnHangup.addEventListener("click", () => {
+      enviarComandoDirecto("CMD_CALL:END");
+      finalizarLlamadaUI("Llamada colgada");
+    });
+
+    function mostrarLlamadaEntrante(firma) {
+      callBox.className = "call-status-box ringing";
+      callStateText.textContent = "¡LLAMADA ENTRANTE!";
+      callSubText.textContent = `HMAC: ${firma}`;
+      btnCall.disabled = true;
+      btnAnswer.disabled = false;
+      btnHangup.disabled = false;
+      iniciarTimbre();
+    }
+
+    function iniciarLlamadaActiva() {
+      detenerTimbre();
+      callBox.className = "call-status-box in-call";
+      callStateText.textContent = "En Llamada Activa";
+      btnCall.disabled = true;
+      btnAnswer.disabled = true;
+      btnHangup.disabled = false;
+      callSeconds = 0;
+      clearInterval(callDurationTimer);
+      callDurationTimer = setInterval(() => {
+        callSeconds++;
+        document.getElementById("callTimer").textContent =
+          `${String(Math.floor(callSeconds / 60)).padStart(2, "0")}:${String(callSeconds % 60).padStart(2, "0")}`;
+      }, 1000);
+    }
+
+    function finalizarLlamadaUI(motivo) {
+      detenerTimbre();
+      clearInterval(callDurationTimer);
+      document.getElementById("callTimer").textContent = "00:00";
+      callBox.className = "call-status-box";
+      callStateText.textContent = "Línea Libre";
+      callSubText.textContent = motivo;
+      btnCall.disabled = false;
+      btnAnswer.disabled = true;
+      btnHangup.disabled = true;
+    }
+  </script>
+</body>
+</html>
